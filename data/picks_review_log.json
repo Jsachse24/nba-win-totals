@@ -1,0 +1,26 @@
+{
+ "items": [
+  {
+   "analyst": "Ricky O'Donnell",
+   "team": "UTA",
+   "source_url": "https://sports.yahoo.com/articles/nba-8-locks-over-under-120000142.html",
+   "title": "NBA's 8 locks on over/under win totals, including Lakers, Warriors, Bulls, and more",
+   "date": "2026-09-25",
+   "timestamp": null,
+   "reason": "Not a win-total side: recommends Jazz to make playoffs (+120) instead of the 37.5 over/under.",
+   "note": "Arguably implies an over lean, but no over/under side is stated -- excluded per rules.",
+   "added_at": "2026-10-05T14:43:40-07:00"
+  },
+  {
+   "analyst": "John Hollinger",
+   "team": null,
+   "source_url": "https://www.nytimes.com/athletic/7609433/2026/09/24/nba-season-predictions-surprises/",
+   "title": "NBA season predictions (The Athletic)",
+   "date": "2026-09-24",
+   "timestamp": null,
+   "reason": "Source unreadable: The Athletic returns 403 / paywall. A third-party recap mentions picks (e.g. CLE over 47.5, MIL over 26.5), but that's secondhand, so nothing was recorded.",
+   "note": "If you have a subscription, paste the picks section and I'll add them from the original.",
+   "added_at": "2026-10-05T14:43:48-07:00"
+  }
+ ]
+}

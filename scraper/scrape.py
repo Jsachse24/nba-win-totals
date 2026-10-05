@@ -15,7 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import (BOOKS, FIELDS, LINES, OVERRIDES, SNAPSHOTS, apply_overrides,  # noqa: E402
-                  empty_books, load_json, print_summary, validate, validate_overrides)
+                  empty_books, flag_suspect_alt_lines, load_json, print_summary, print_suspects,
+                  validate, validate_overrides)
 from sources import SOURCES, SourceError  # noqa: E402
 from teams import ABBRS  # noqa: E402
 
@@ -27,9 +28,13 @@ def compute_opening(current_teams, now_iso):
     """Opening = earliest snapshot in which each team/book had a total.
 
     Neither source publishes opening lines, so this is "since first tracked".
+    Suspected alt lines are dropped from older snapshots too, so an alt line
+    captured before that check existed can't become a team's "opening" line.
     """
     snaps = sorted(SNAPSHOTS.glob("*.json"))
     history = [load_json(p) for p in snaps] + [{"captured_at": now_iso, "teams": current_teams}]
+    for snap in history:
+        snap["teams"], _ = flag_suspect_alt_lines(_complete(snap["teams"]))
     opening = {a: {b: None for b in BOOKS} for a in ABBRS}
     for snap in history:
         for a in ABBRS:
@@ -41,6 +46,15 @@ def compute_opening(current_teams, now_iso):
                     opening[a][b] = {**{f: rec.get(f) for f in FIELDS}, "at": snap["captured_at"]}
     first = history[0]["captured_at"]
     return opening, first
+
+
+def _complete(teams):
+    books = empty_books()
+    for a in ABBRS:
+        for b in BOOKS:
+            rec = teams.get(a, {}).get(b) or {}
+            books[a][b] = {f: rec.get(f) for f in FIELDS}
+    return books
 
 
 def main():
@@ -78,6 +92,8 @@ def main():
         sys.exit(f"\nFAIL: source(s) failed: {', '.join(failed)}. lines.json NOT written. "
                  "Re-run with --partial to publish without them, or fill gaps via manual_overrides.json.")
 
+    books, suspects = flag_suspect_alt_lines(books)
+
     overrides = load_json(OVERRIDES, {"overrides": []})
     ov_errors = validate_overrides(overrides)
     merged, src = apply_overrides(books, overrides) if not ov_errors else (books, None)
@@ -86,6 +102,7 @@ def main():
 
     if src is not None:
         print_summary(merged, src, total_sum)
+    print_suspects(suspects)
     print()
     for w in warnings:
         print(f"WARN: {w}")
@@ -108,12 +125,13 @@ def main():
         "book_source": BOOK_SOURCE,
         "sources": source_status,
         "teams": books,
+        "suspect_alt_lines": suspects,
         "opening": opening,
     }
     LINES.write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
     SNAPSHOTS.mkdir(parents=True, exist_ok=True)
     snap_path = SNAPSHOTS / f"{now:%Y-%m-%d_%H%M}.json"
-    snap = {"captured_at": now_iso, "sources": source_status, "teams": books}
+    snap = {"captured_at": now_iso, "sources": source_status, "teams": books, "suspect_alt_lines": suspects}
     snap_path.write_text(json.dumps(snap, indent=1) + "\n", encoding="utf-8")
     print(f"\nOK: wrote {LINES.relative_to(LINES.parent.parent)} and {snap_path.relative_to(LINES.parent.parent)}")
 

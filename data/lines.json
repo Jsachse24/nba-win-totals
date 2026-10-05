@@ -1,6 +1,6 @@
 {
  "season": "2026-27",
- "generated_at": "2026-10-05T13:32:01-07:00",
+ "generated_at": "2026-10-05T14:47:08-07:00",
  "opening_basis": "first_tracked",
  "first_tracked_at": "2026-10-05T13:32:01-07:00",
  "book_source": {
@@ -13,7 +13,7 @@
   "fanduel": {
    "ok": true,
    "url": "https://sportsbook.fanduel.com/navigation/nba?tab=regular-season-wins",
-   "fetched_at": "2026-10-05T13:32:01-07:00",
+   "fetched_at": "2026-10-05T14:47:08-07:00",
    "books": [
     "fanduel"
    ]
@@ -21,7 +21,7 @@
   "vegasinsider": {
    "ok": true,
    "url": "https://www.vegasinsider.com/nba/odds/win-totals/",
-   "fetched_at": "2026-10-05T13:32:01-07:00",
+   "fetched_at": "2026-10-05T14:47:08-07:00",
    "books": [
     "betmgm",
     "caesars",
@@ -32,8 +32,8 @@
  "teams": {
   "BOS": {
    "draftkings": {
-    "total": 53.5,
-    "over": 150,
+    "total": null,
+    "over": null,
     "under": null
    },
    "fanduel": {
@@ -98,8 +98,8 @@
   },
   "PHI": {
    "draftkings": {
-    "total": 48.5,
-    "over": -200,
+    "total": null,
+    "over": null,
     "under": null
    },
    "fanduel": {
@@ -245,8 +245,8 @@
     "under": null
    },
    "caesars": {
-    "total": 25.5,
-    "over": -130,
+    "total": 26.5,
+    "over": -125,
     "under": null
    }
   },
@@ -691,14 +691,27 @@
    }
   }
  },
+ "suspect_alt_lines": [
+  {
+   "team": "BOS",
+   "book": "draftkings",
+   "total": 53.5,
+   "over": 150,
+   "under": null,
+   "others_median": 50.5
+  },
+  {
+   "team": "PHI",
+   "book": "draftkings",
+   "total": 48.5,
+   "over": -200,
+   "under": null,
+   "others_median": 50.5
+  }
+ ],
  "opening": {
   "BOS": {
-   "draftkings": {
-    "total": 53.5,
-    "over": 150,
-    "under": null,
-    "at": "2026-10-05T13:32:01-07:00"
-   },
+   "draftkings": null,
    "fanduel": {
     "total": 50.5,
     "over": -115,
@@ -771,12 +784,7 @@
    }
   },
   "PHI": {
-   "draftkings": {
-    "total": 48.5,
-    "over": -200,
-    "under": null,
-    "at": "2026-10-05T13:32:01-07:00"
-   },
+   "draftkings": null,
    "fanduel": {
     "total": 50.5,
     "over": -105,

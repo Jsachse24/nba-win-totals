@@ -25,6 +25,14 @@ EXPECTED_SUM, SUM_TOLERANCE = 1230, 30
 OUTLIER_WINS = 2  # warn when a book is this far from the team's median total
 VI_STALE_MAD = 4  # VI vs FanDuel mean abs diff above this = VI page looks stale
 
+# VegasInsider's DraftKings column sometimes shows an alternate line (e.g. BOS
+# o53.5 +150 when every other book is at 50.5-51.5). Nothing in VI's HTML marks
+# main vs alternate, so a scraped total this far from the other books' median
+# is treated as a suspected alt line: stored as missing and reported, never
+# guessed at. Enter the real main line via manual_overrides.json.
+SUSPECT_ALT_BOOKS = ("draftkings",)
+ALT_LINE_WINS = 2
+
 
 def load_json(path, default=None):
     if not path.exists():
@@ -92,6 +100,36 @@ def apply_overrides(books, ov):
                 rec[f] = e[f]
                 src[a][b][f] = "override" if e[f] is not None else None
     return merged, src
+
+
+def flag_suspect_alt_lines(books):
+    """Return (books, suspects). Suspected alt lines are replaced with an empty
+    record in a copy of `books`; the original records are left untouched."""
+    out = {a: dict(bs) for a, bs in books.items()}
+    suspects = []
+    for a in ABBRS:
+        for b in SUSPECT_ALT_BOOKS:
+            rec = books[a][b]
+            t = rec.get("total")
+            others = [books[a][o]["total"] for o in BOOKS if o != b and books[a][o].get("total") is not None]
+            if t is None or len(others) < 2:
+                continue
+            med = statistics.median(others)
+            if abs(t - med) >= ALT_LINE_WINS:
+                out[a][b] = {f: None for f in FIELDS}
+                suspects.append({"team": a, "book": b, **{f: rec.get(f) for f in FIELDS}, "others_median": med})
+    return out, suspects
+
+
+def print_suspects(suspects):
+    if not suspects:
+        return
+    print()
+    print(f"Suspected alternate lines excluded ({len(suspects)}) -- shown as '-'; add the main line via manual_overrides.json:")
+    for s in suspects:
+        o = "-" if s["over"] is None else f"{s['over']:+d}"
+        print(f"  {s['team']:<4} {BOOK_SHORT[s['book']]:<4} o{s['total']:g} {o}  vs other books' median {s['others_median']:g}"
+              f" ({s['total'] - s['others_median']:+g})")
 
 
 def consensus(merged, abbr):

@@ -1,0 +1,37 @@
+{
+ "_help": "Approved analysts and the sources picks may come from. Add a source here before merging picks from it. kind: youtube (captions via yt-dlp) or article. 'watch' pages are scanned by `analyst_scraper.py discover` for new over/under episodes.",
+ "analysts": [
+  {"name": "Bill Simmons", "outlet": "The Bill Simmons Podcast (The Ringer)"},
+  {"name": "Zach Lowe", "outlet": "The Zach Lowe Show (The Ringer)"},
+  {"name": "Brian Windhorst", "outlet": "Hoop Collective (ESPN)"},
+  {"name": "Shams Charania", "outlet": "ESPN"},
+  {"name": "John Hollinger", "outlet": "The Athletic"},
+  {"name": "Ricky O'Donnell", "outlet": "SB Nation"},
+  {"name": "Stephen Noh", "outlet": "The Sporting News"},
+  {"name": "Andy Bailey", "outlet": "Bleacher Report"}
+ ],
+ "watch": [
+  {"name": "The Bill Simmons Podcast", "url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast"},
+  {"name": "The Zach Lowe Show", "url": "https://www.theringer.com/podcasts/the-zach-lowe-show"}
+ ],
+ "sources": [
+  {"id": "windhorst-west-2026-08-14", "analysts": ["Brian Windhorst"], "kind": "youtube",
+   "title": "NBA Western Conference Win Total REACTION - Most Shocking Over/Unders For 2026-27",
+   "date": "2026-08-14", "url": "https://www.youtube.com/watch?v=PKk7b97I9p0"},
+  {"id": "windhorst-east-2026-08-18", "analysts": ["Brian Windhorst"], "kind": "youtube",
+   "title": "NBA Eastern Conference Win Totals REACTION - STUNNING Over/Unders For 2026-27",
+   "date": "2026-08-18", "url": "https://www.youtube.com/watch?v=ZjBbVkD4xaw"},
+  {"id": "odonnell-8-locks-2026-09-25", "analysts": ["Ricky O'Donnell"], "kind": "article",
+   "title": "NBA's 8 locks on over/under win totals",
+   "date": "2026-09-25", "url": "https://sports.yahoo.com/articles/nba-8-locks-over-under-120000142.html"},
+  {"id": "noh-unders-2026-07-29", "analysts": ["Stephen Noh"], "kind": "article",
+   "title": "NBA over/under predictions: Win totals and best unders for 2026-27 season",
+   "date": "2026-07-29", "url": "https://sports.yahoo.com/articles/nba-over-under-predictions-win-121446599.html"},
+  {"id": "bailey-wl-2026-08-12", "analysts": ["Andy Bailey"], "kind": "article",
+   "title": "Win-Loss Record Predictions for Every Team After 2026-27 NBA Schedule Release",
+   "date": "2026-08-12", "url": "https://bleacherreport.com/articles/25458880-win-loss-record-predictions-every-team-after-2026-27-nba-schedule-release"},
+  {"id": "hollinger-predictions-2026-09-24", "analysts": ["John Hollinger"], "kind": "article",
+   "title": "NBA season predictions (The Athletic)",
+   "date": "2026-09-24", "url": "https://www.nytimes.com/athletic/7609433/2026/09/24/nba-season-predictions-surprises/"}
+ ]
+}
