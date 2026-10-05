@@ -1,4 +1,10 @@
-"""Analyst win-total picks + projections. Separate from the lines scraper.
+"""Analyst picks, expert win numbers and projections. Separate from the lines scraper.
+
+Two expert datasets, kept apart:
+  A. data/analyst_picks.json -- only picks where the person explicitly states a
+     side (over/under) against a line.
+  B. data/expert_wins.json   -- stated win numbers or predicted W-L records.
+     A side is never derived from these; the page compares the average to the line.
 
 A script can fetch transcripts and articles, but it can't reliably tell
 "I'm taking the over" from "I like them" without guessing. So the work is split:
@@ -7,16 +13,18 @@ A script can fetch transcripts and articles, but it can't reliably tell
                   (prints only; add the ones you want to data/analyst_sources.json)
   2. fetch     -- download each source's text into analyst_cache/ (gitignored):
                   YouTube captions + description via yt-dlp, article text via requests
-  3. (Claude reads the cached text and writes a picks file -- see README)
-  4. merge F   -- validate picks/review items in file F and add them to
-                  data/analyst_picks.json / data/picks_review_log.json, skipping duplicates
-  5. projections -- pull ESPN BPI projected wins into data/projections.json
+  3. (Claude reads the cached text and writes an input file -- see README)
+  4. merge F   -- validate picks / expert_wins / review items in file F and add them,
+                  skipping duplicates; prints the coverage report
+  5. coverage  -- teams with 0 / 1 / 2 / 3+ independent sources in each dataset
+  6. projections -- pull ESPN BPI projected wins into data/projections.json
                   (fails loudly until ESPN publishes 2026-27 numbers)
 
     python scraper/analyst_scraper.py discover
     python scraper/analyst_scraper.py fetch [--source ID] [--force] [--cookies-from-browser chrome]
-    python scraper/analyst_scraper.py merge new_picks.json [--dry-run]
+    python scraper/analyst_scraper.py merge new_items.json [--dry-run]
     python scraper/analyst_scraper.py validate
+    python scraper/analyst_scraper.py coverage
     python scraper/analyst_scraper.py projections [--dry-run]
 """
 import argparse
@@ -36,15 +44,19 @@ from teams import ABBRS  # noqa: E402
 
 SOURCES = DATA / "analyst_sources.json"
 PICKS = DATA / "analyst_picks.json"
+EXPERT_WINS = DATA / "expert_wins.json"
 REVIEW = DATA / "picks_review_log.json"
 PROJECTIONS = DATA / "projections.json"
 CACHE = ROOT / "analyst_cache"
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
 SIDES = ("over", "under")
-BASES = ("stated", "derived_from_wl_prediction")
+BASES = ("stated",)  # dataset A holds explicitly stated sides only
 SUMMARY_MAX = 200  # own-words summary, not a quote
 PICK_FIELDS = ("analyst", "team", "side", "line", "source_url", "title", "date", "timestamp", "summary", "basis")
+# Dataset B: kind "record" = predicted W-L (wins + losses == 82); "projected_wins" = a stated win number
+WIN_KINDS = ("record", "projected_wins")
+WIN_FIELDS = ("expert", "team", "wins", "losses", "kind", "source_url", "title", "date", "timestamp", "note")
 REVIEW_FIELDS = ("analyst", "team", "source_url", "title", "date", "timestamp", "reason")
 DISCOVER_RE = re.compile(r"over[-\s/]?unders?|win[-\s]totals?", re.I)
 
@@ -273,6 +285,40 @@ def validate_review(r, cfg, where):
     return errs
 
 
+def win_key(w):
+    return (w["expert"], w["team"], w["source_url"])
+
+
+def validate_win(w, cfg, where):
+    errs = []
+    missing = [f for f in WIN_FIELDS if f not in w]
+    if missing:
+        return [f"{where}: missing field(s) {missing}"]
+    src = _source_by_url(cfg).get(w["source_url"])
+    if w["expert"] not in _analysts(cfg):
+        errs.append(f"{where}: expert {w['expert']!r} isn't approved in analyst_sources.json")
+    if w["team"] not in ABBRS:
+        errs.append(f"{where}: unknown team {w['team']!r}")
+    if w["kind"] not in WIN_KINDS:
+        errs.append(f"{where}: kind must be one of {WIN_KINDS}")
+    wins, losses = w["wins"], w["losses"]
+    if isinstance(wins, bool) or not isinstance(wins, (int, float)) or not 0 <= wins <= 82:
+        errs.append(f"{where}: wins must be a number 0-82, got {wins!r}")
+    elif w["kind"] == "record":
+        if isinstance(losses, bool) or not isinstance(losses, int) or not isinstance(wins, int) or wins + losses != 82:
+            errs.append(f"{where}: a record needs integer wins + losses == 82, got {wins!r}-{losses!r}")
+    elif losses is not None:
+        errs.append(f"{where}: projected_wins items have losses null")
+    if src is None:
+        errs.append(f"{where}: source_url isn't listed in analyst_sources.json")
+    elif src["kind"] == "youtube" and not w["timestamp"]:
+        errs.append(f"{where}: video source needs a timestamp")
+    _check_date(w["date"], where, errs)
+    if len(w["note"] or "") > SUMMARY_MAX:
+        errs.append(f"{where}: note max {SUMMARY_MAX} chars")
+    return errs
+
+
 def validate_files(cfg):
     errs = []
     picks = load_json(PICKS, {"picks": []})["picks"]
@@ -283,6 +329,14 @@ def validate_files(cfg):
             k = pick_key(p)
             if k in seen:
                 errs.append(f"analyst_picks.json #{i}: duplicate of #{seen[k]} {k}")
+            seen[k] = i
+    seen = {}
+    for i, w in enumerate(load_json(EXPERT_WINS, {"wins": []})["wins"]):
+        errs += validate_win(w, cfg, f"expert_wins.json #{i}")
+        if all(f in w for f in ("expert", "team", "source_url")):
+            k = win_key(w)
+            if k in seen:
+                errs.append(f"expert_wins.json #{i}: duplicate of #{seen[k]} {k}")
             seen[k] = i
     for i, r in enumerate(load_json(REVIEW, {"items": []})["items"]):
         errs += validate_review(r, cfg, f"picks_review_log.json #{i}")
@@ -319,7 +373,26 @@ def cmd_validate(_args):
     if errs:
         sys.exit("\nFAIL: analyst data invalid.")
     n = len(load_json(PICKS, {"picks": []})["picks"])
-    print(f"Analyst data OK ({n} picks).")
+    nw = len(load_json(EXPERT_WINS, {"wins": []})["wins"])
+    print(f"Analyst data OK ({n} stated picks, {nw} expert win numbers).")
+    print_coverage()
+
+
+def print_coverage():
+    """Teams with 0 / 1 / 2 / 3+ independent sources (distinct people) in each dataset."""
+    sets = {
+        "A analyst_picks (stated sides)": [(p["team"], p["analyst"]) for p in load_json(PICKS, {"picks": []})["picks"]],
+        "B expert_wins (win numbers)": [(w["team"], w["expert"]) for w in load_json(EXPERT_WINS, {"wins": []})["wins"]],
+    }
+    print("\nCoverage: teams by number of independent sources")
+    print(f"  {'dataset':<32} {'0':>4} {'1':>4} {'2':>4} {'3+':>4}   people")
+    for name, pairs in sets.items():
+        per = {a: set() for a in ABBRS}
+        for team, who in pairs:
+            per[team].add(who)
+        n = [len(v) for v in per.values()]
+        people = len({who for _, who in pairs})
+        print(f"  {name:<32} {n.count(0):>4} {n.count(1):>4} {n.count(2):>4} {sum(x >= 3 for x in n):>4}   {people}")
 
 
 # ---------------------------------------------------------------- merge
@@ -353,6 +426,27 @@ def cmd_merge(args):
         existing[k] = rec
         added.append(rec)
 
+    wins_doc = load_json(EXPERT_WINS, {"wins": []})
+    wexisting = {win_key(w): w for w in wins_doc["wins"]}
+    wadded = []
+    for i, w in enumerate(incoming.get("expert_wins", [])):
+        e = validate_win(w, cfg, f"incoming expert_wins #{i}")
+        if e:
+            errs += e
+            continue
+        k = win_key(w)
+        if k in wexisting:
+            old = wexisting[k]
+            if old["wins"] != w["wins"] or old["losses"] != w["losses"]:
+                errs.append(f"incoming expert_wins #{i} {k}: conflicts with existing "
+                            f"({old['wins']}-{old['losses']} vs {w['wins']}-{w['losses']}) -- resolve by hand")
+            else:
+                dup += 1
+            continue
+        rec = {"id": hashlib.sha1("|".join(k).encode()).hexdigest()[:12], **{f: w[f] for f in WIN_FIELDS}, "added_at": now}
+        wexisting[k] = rec
+        wadded.append(rec)
+
     rev_keys = {(r["analyst"], r["team"], r["source_url"], r["timestamp"]) for r in review_doc["items"]}
     rev_added = []
     for i, r in enumerate(incoming.get("review", [])):
@@ -371,17 +465,24 @@ def cmd_merge(args):
         print(f"ERROR: {e}", file=sys.stderr)
     if errs:
         sys.exit("\nFAIL: nothing merged.")
-    print(f"{len(added)} new pick(s), {len(rev_added)} new review item(s), {dup} duplicate(s) skipped.")
+    print(f"{len(added)} new pick(s), {len(wadded)} new expert win number(s), {len(rev_added)} new review item(s), "
+          f"{dup} duplicate(s) skipped.")
     for r in added:
-        print(f"  + {r['analyst']:<16} {r['team']} {r['side']:<5} {r['line'] if r['line'] is not None else '-'}")
+        print(f"  + pick {r['analyst']:<16} {r['team']} {r['side']:<5} {r['line'] if r['line'] is not None else '-'}")
+    for r in wadded:
+        print(f"  + wins {r['expert']:<16} {r['team']} {r['wins']}" + (f"-{r['losses']}" if r["losses"] is not None else ""))
     if args.dry_run:
         print("Dry run -- nothing written.")
         return
     picks_doc["picks"] += added
     picks_doc["picks"].sort(key=lambda p: (p["team"], p["analyst"], p["date"]))
+    wins_doc["wins"] += wadded
+    wins_doc["wins"].sort(key=lambda w: (w["team"], w["expert"], w["date"]))
     review_doc["items"] += rev_added
     save(PICKS, picks_doc)
+    save(EXPERT_WINS, wins_doc)
     save(REVIEW, review_doc)
+    print_coverage()
 
 
 # ---------------------------------------------------------- projections
@@ -437,6 +538,7 @@ def main():
     m.add_argument("--dry-run", action="store_true")
     m.set_defaults(fn=cmd_merge)
     sub.add_parser("validate").set_defaults(fn=cmd_validate)
+    sub.add_parser("coverage").set_defaults(fn=lambda _a: print_coverage())
     p = sub.add_parser("projections")
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(fn=cmd_projections)

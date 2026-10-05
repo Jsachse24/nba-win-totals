@@ -165,9 +165,17 @@ python -m http.server 8000      # then open http://localhost:8000
   if that book's line later moves. "My picks only" filters to tagged teams. Saved
   in this browser's localStorage (`nbawt-picks`); if storage is blocked, picks work
   until the page reloads.
-- **Analysts:** tally of stated sides, one per analyst (their latest pick for that
-  team), e.g. `Over 3-1`. Sorts by net lean (overs minus unders). Details and
-  source links are in the drawer.
+- **Analysts:** tally of *explicitly stated* sides only (dataset A), one per
+  analyst (their latest pick for that team), e.g. `Over 3-1`. Sorts by net lean
+  (overs minus unders). Details and source links are in the drawer.
+- **Expert W:** average of published win numbers / predicted records (dataset B),
+  one per expert (their latest), with the source count: `52.3 (4)`. The drawer
+  lists every source with date and link.
+- **Rec:** expert average minus the consensus line. `Over +1.8` / `Under -2.1` when
+  the gap is at least `REC_THRESHOLD` (1.5) wins; `No lean` below that; `Thin` when
+  fewer than `REC_MIN_SOURCES` (3) independent experts have a number (the gap is
+  still shown). Both constants sit at the top of the script in `index.html`. Sorts
+  by the gap. This is a comparison to published opinions, not a model.
 - **Proj:** projected wins / difference vs consensus (`52.1 / +2.6`). Full view and drawer.
 - **Pyth W / Luck:** 2025-26 Pythagorean wins (from point differential) and
   Luck = actual wins minus Pyth W. Positive luck means a team won more than its
@@ -193,7 +201,8 @@ win-total episodes drop mid-to-late October).
 | File | What |
 |---|---|
 | `data/analyst_sources.json` | approved analysts, approved sources (URL, title, date, kind), show pages to watch |
-| `data/analyst_picks.json` | one record per pick: analyst, team, side, line, source_url, title, date, timestamp, summary, basis |
+| `data/analyst_picks.json` | **A.** explicitly stated sides only: analyst, team, side, line, source_url, title, date, timestamp, summary, basis (`stated`) |
+| `data/expert_wins.json` | **B.** stated win numbers / predicted records: expert, team, wins, losses (records only), kind (`record` / `projected_wins`), source_url, title, date, timestamp, note |
 | `data/picks_review_log.json` | excluded / ambiguous items, with the reason |
 | `data/projections.json` | team, projected_wins, system, source, date |
 | `analyst_cache/` | fetched transcripts / article text (gitignored, local only) |
@@ -209,18 +218,22 @@ python scraper/analyst_scraper.py fetch --cookies-from-browser chrome   # YouTub
 #   -> ask Claude: "read analyst_cache/<id>.txt and write picks to new_picks.json"
 python scraper/analyst_scraper.py merge new_picks.json --dry-run
 python scraper/analyst_scraper.py merge new_picks.json
-python scraper/analyst_scraper.py validate
+python scraper/analyst_scraper.py validate        # also prints the coverage report
+python scraper/analyst_scraper.py coverage        # teams with 0 / 1 / 2 / 3+ independent sources, per dataset
 python scraper/analyst_scraper.py projections     # ESPN BPI -> data/projections.json
 ```
 
-`new_picks.json` looks like `{"picks": [...], "review": [...]}`. Rules enforced by `merge`:
+The input file looks like `{"picks": [...], "expert_wins": [...], "review": [...]}`.
+A predicted record goes in `expert_wins`. Never turn it into a side in `picks`; the
+page compares the expert average to the line instead. Rules enforced by `merge`:
 
 - analyst must be approved and the source URL listed in `analyst_sources.json`;
 - team is canonical, side is `over`/`under`, line is null or 10-70 in half-wins;
 - video sources need a timestamp; summary is your own words, max 200 chars;
-- `basis` is `stated`, or `derived_from_wl_prediction` (Andy Bailey's W-L
-  predictions vs the line he quoted; labelled on the page);
-- duplicates (same analyst + team + source URL) are skipped, so re-runs are safe;
+- `basis` must be `stated` (derived sides aren't allowed in dataset A);
+- expert_wins: `record` needs integer wins + losses = 82; `projected_wins` has
+  `losses: null`; same source/approval/date/timestamp rules as picks;
+- duplicates (same person + team + source URL) are skipped, so re-runs are safe;
   a duplicate with a *different* side or line stops the merge for you to resolve;
 - nothing is written if any item fails.
 

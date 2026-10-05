@@ -238,6 +238,9 @@ footer a { color: var(--muted); }
   // SIGMA: assumed SD (in wins) of a team's final wins around the market's
   // expectation. An assumption (typical miss of preseason totals), not fitted.
   var SIGMA = 8;
+  // Rec column: expert average minus consensus line.
+  var REC_THRESHOLD = 1.5;   // |gap| in wins needed for "Over"/"Under"; smaller = "No lean"
+  var REC_MIN_SOURCES = 3;   // fewer independent expert sources than this = "Thin"
 
   // Canonical teams -- keep in sync with scraper/teams.py
   var TEAMS = [
@@ -502,7 +505,8 @@ footer a { color: var(--muted); }
     rows.forEach(function (r) { by[r.abbr] = r; });
     ((doc && doc.picks) || []).forEach(function (p) {
       var r = by[p.team];
-      if (!r || (p.side !== "over" && p.side !== "under")) return;
+      // Dataset A: only explicitly stated sides count
+      if (!r || (p.side !== "over" && p.side !== "under") || (p.basis && p.basis !== "stated")) return;
       r.anAll.push(p);
       var prev = r.anLatest[p.analyst];
       if (!prev || p.date > prev.date) r.anLatest[p.analyst] = p;
@@ -514,6 +518,38 @@ footer a { color: var(--muted); }
       r.anUnder = r.an.length - r.anOver;
     });
   }
+  // Expert win numbers (dataset B): one number per expert per team (their latest);
+  // the average and Rec use those. Sides are never derived from these.
+  function attachExperts(rows, doc) {
+    var by = {};
+    rows.forEach(function (r) { by[r.abbr] = r; r.expAll = []; });
+    ((doc && doc.wins) || []).forEach(function (w) {
+      var r = by[w.team];
+      if (r && isNum(w.wins)) r.expAll.push(w);
+    });
+    rows.forEach(function (r) {
+      var latest = {};
+      r.expAll.forEach(function (w) { if (!latest[w.expert] || w.date > latest[w.expert].date) latest[w.expert] = w; });
+      r.experts = Object.keys(latest).sort().map(function (k) { return latest[k]; });
+      r.expAll.sort(function (x, y) { return x.expert.localeCompare(y.expert) || (y.date < x.date ? -1 : 1); });
+      r.expertAvg = r.experts.length ? r.experts.reduce(function (a, w) { return a + w.wins; }, 0) / r.experts.length : null;
+      r.recGap = (r.expertAvg !== null && r.cons !== null) ? r.expertAvg - r.cons : null;
+      r.rec = r.recGap === null ? null
+        : r.experts.length < REC_MIN_SOURCES ? "thin"
+        : r.recGap >= REC_THRESHOLD ? "over" : r.recGap <= -REC_THRESHOLD ? "under" : "none";
+    });
+  }
+  function recCell(r) {
+    if (r.rec === null) return val(DASH);
+    var gap = fmtSigned(r.recGap);
+    var t = "Expert avg " + r.expertAvg.toFixed(1) + " (" + r.experts.length + " source" + (r.experts.length === 1 ? "" : "s") +
+      ") vs line " + fmtTotal(r.cons) + " = " + gap + ". Lean needs |gap| >= " + REC_THRESHOLD + " and " + REC_MIN_SOURCES + "+ sources.";
+    var txt = r.rec === "thin" ? '<span class="na">Thin</span> <span class="bk">' + gap + "</span>"
+      : r.rec === "none" ? '<span class="na">No lean</span>'
+      : '<span class="' + (r.rec === "over" ? "up" : "down") + '">' + (r.rec === "over" ? "Over " : "Under ") + gap + "</span>";
+    return '<span title="' + esc(t) + '">' + txt + "</span>";
+  }
+
   function attachProjections(rows, doc) {
     var by = {};
     ((doc && doc.projections) || []).forEach(function (x) { if (isNum(x.projected_wins)) by[x.team] = x; });
@@ -729,10 +765,12 @@ footer a { color: var(--muted); }
   ];
   BOOKS.forEach(function (b) { COLS = COLS.concat(bookCols(b)); });
   COLS = COLS.concat(bestCol("over"), bestCol("under"), [
-    { key: "expert", label: "Expert W", grp: "ctx", view: "both", cls: "bl", title: "Average of published expert win numbers (source count)",
+    { key: "expert", label: "Expert W", grp: "ctx", view: "both", cls: "bl", title: "Average of published expert win numbers / predicted records, one per expert (source count)",
       get: function (r) { return r.expertAvg; }, cell: expertCell },
-    { key: "rec", label: "Rec", grp: "ctx", view: "both", cls: "left", title: "Expert average vs consensus line",
-      get: function () { return null; }, cell: function () { return val(DASH); } },
+    { key: "rec", label: "Rec", grp: "ctx", view: "both", cls: "left",
+      title: "Expert average minus consensus line. Over/Under at a gap of " + REC_THRESHOLD + "+ wins with " + REC_MIN_SOURCES +
+        "+ independent sources; Thin = fewer sources. Sorts by the gap",
+      get: function (r) { return r.recGap; }, cell: recCell },
     { key: "an", label: "Analysts", grp: "ctx", view: "both", cls: "left",
       title: "Stated analyst sides, one per analyst (latest pick). Sorts by net lean: overs minus unders",
       get: function (r) { return r.an.length ? r.anOver - r.anUnder : null; }, cell: analystCell },
@@ -886,7 +924,7 @@ footer a { color: var(--muted); }
         h += '<div class="bestrow">' + cardBest(r, r.bestOver, "over") + cardBest(r, r.bestUnder, "under") + "</div>";
         h += '<div class="stats">' +
           '<span><span class="k">Expert W </span>' + expertCell(r) + "</span>" +
-          '<span><span class="k">Rec </span>' + val(DASH) + "</span>" +
+          '<span><span class="k">Rec </span>' + recCell(r) + "</span>" +
           '<span><span class="k">Analysts </span>' + (analystCell(r) || DASH) + "</span>" +
           '<span><span class="k">My pick </span>' + myPickCell(r) + "</span>" +
           (NOTES[r.abbr] ? "<span>" + noteIcon(r) + "</span>" : "") + "</div></div>";
@@ -922,7 +960,6 @@ footer a { color: var(--muted); }
       h += "<li><b>" + esc(p.analyst) + "</b> " + (p.side === "over" ? "Over" : "Under") +
         (isNum(p.line) ? " " + fmtTotal(p.line) : "") +
         (isNum(p.line) && r.cons !== null && p.line !== r.cons ? ' <span class="tag">consensus now ' + fmtTotal(r.cons) + "</span>" : "") +
-        (p.basis === "derived_from_wl_prediction" ? ' <span class="tag">from W-L prediction</span>' : "") +
         (cur ? "" : ' <span class="tag">superseded</span>') +
         "<br>" + fmtDate(p.date + "T12:00:00") + ' · <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a>" +
         (p.timestamp ? " @" + esc(p.timestamp) : "") + '<br><span class="na">' + esc(p.summary) + "</span></li>";
@@ -930,8 +967,19 @@ footer a { color: var(--muted); }
     return h + "</ul>";
   }
   function drawerExperts(r) {
-    if (!r.experts.length) return '<p class="note">No published win numbers for this team yet.</p>';
-    return "";
+    if (!r.expAll.length) return '<p class="note">No published win numbers for this team yet.</p>';
+    var h = '<div class="stats"><span><span class="k">Average </span><b>' + r.expertAvg.toFixed(1) + "</b> (" + r.experts.length + ")</span>" +
+      '<span><span class="k">vs line </span>' + signedCell(r.recGap) + "</span>" +
+      '<span><span class="k">Rec </span>' + recCell(r) + "</span></div>";
+    h += '<ul class="src-list">';
+    r.expAll.forEach(function (w) {
+      var cur = r.experts.indexOf(w) >= 0;
+      h += "<li><b>" + esc(w.expert) + "</b> " + (w.kind === "record" ? w.wins + "-" + w.losses : w.wins + " wins") +
+        (cur ? "" : ' <span class="tag">superseded</span>') +
+        "<br>" + fmtDate(w.date + "T12:00:00") + ' · <a href="' + esc(w.source_url) + '" target="_blank" rel="noopener">' + esc(w.title) + "</a>" +
+        (w.timestamp ? " @" + esc(w.timestamp) : "") + (w.note ? '<br><span class="na">' + esc(w.note) + "</span>" : "") + "</li>";
+    });
+    return h + "</ul>";
   }
   function renderDrawer() {
     var d = el("drawer"), r = state.drawer && ROW_BY[state.drawer];
@@ -1129,9 +1177,9 @@ footer a { color: var(--muted); }
 
   Promise.all([
     getJSON("data/lines.json"), getJSON("data/manual_overrides.json"), getJSON("data/last_season.json"),
-    getJSON("data/analyst_picks.json"), getJSON("data/projections.json")
+    getJSON("data/analyst_picks.json"), getJSON("data/projections.json"), getJSON("data/expert_wins.json")
   ]).then(function (res) {
-    var lines = ok(res[0]), ov = ok(res[1]), last = ok(res[2]), anDoc = ok(res[3]), projDoc = ok(res[4]);
+    var lines = ok(res[0]), ov = ok(res[1]), last = ok(res[2]), anDoc = ok(res[3]), projDoc = ok(res[4]), expDoc = ok(res[5]);
 
     if (location.protocol === "file:") {
       warn("Opened from disk, so the browser blocks loading the data files. Run <code>python -m http.server</code> in this folder and open http://localhost:8000.");
@@ -1150,6 +1198,7 @@ footer a { color: var(--muted); }
     ROWS.forEach(function (r) { ROW_BY[r.abbr] = r; });
     attachAnalysts(ROWS, anDoc);
     attachProjections(ROWS, projDoc);
+    attachExperts(ROWS, expDoc);
     computeBookHolds();
     // Header sanity check: the 30 lines should roughly add up to the 1230 wins that exist
     var consAll = ROWS.map(function (r) { return r.cons; }).filter(isNum);
@@ -1195,7 +1244,10 @@ footer a { color: var(--muted); }
       "it only goes positive when a book is out of line with FanDuel.<br>" +
       "Preseason lines only. Data: " + (srcBits.join(" · ") || DASH) + ". " +
       "2025-26 records: " + (last && last.source ? '<a href="' + esc(last.source) + '" rel="noopener">Basketball-Reference</a>' : DASH) + ". " +
-      "Analyst picks: " + (anDoc && anDoc.picks ? anDoc.picks.length + " sourced" : DASH) + ". " +
+      "Analyst picks (stated sides only): " + (anDoc && anDoc.picks ? anDoc.picks.length : DASH) + ". " +
+      "Expert win numbers: " + (expDoc && expDoc.wins ? expDoc.wins.length : DASH) + ". " +
+      "<b>Rec</b> = expert average minus the consensus line: Over/Under at " + REC_THRESHOLD + "+ wins, No lean below that, Thin with fewer than " +
+      REC_MIN_SOURCES + " independent sources. " +
       "Projections: " + (projDoc && projDoc.projections && projDoc.projections.length ? esc(projDoc.system || "") : "not published yet") + ".";
 
     el("banners").innerHTML = banners.map(function (b) { return '<div class="banner">' + b + "</div>"; }).join("");

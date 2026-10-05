@@ -21,6 +21,17 @@
    "reason": "Source unreadable: The Athletic returns 403 / paywall. A third-party recap mentions picks (e.g. CLE over 47.5, MIL over 26.5), but that's secondhand, so nothing was recorded.",
    "note": "If you have a subscription, paste the picks section and I'll add them from the original.",
    "added_at": "2026-10-05T14:43:48-07:00"
+  },
+  {
+   "analyst": "Stephen Noh",
+   "team": "IND",
+   "source_url": "https://sports.yahoo.com/articles/nba-over-under-predictions-win-121446599.html",
+   "title": "NBA over/under predictions: Win totals and best unders for 2026-27 season, including Wizards, Pacers, and Mavs",
+   "date": "2026-07-29",
+   "timestamp": null,
+   "reason": "Two different win numbers for the Pacers in the same article (model about 40; his adjusted view about 42), so no single expert number was recorded.",
+   "note": "His under 43.5 pick is recorded in analyst_picks.",
+   "added_at": "2026-10-05T15:10:47-07:00"
   }
  ]
 }
