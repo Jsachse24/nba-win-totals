@@ -16,6 +16,7 @@
   --override: #e3b341;
   --pick: #c58af9; --pick-bg: rgba(197, 138, 249, .16);
   --row-hover: #1a2027;
+  --shadow: 0 10px 40px rgba(0, 0, 0, .5);
 }
 :root[data-theme="light"] {
   --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --border: #d9dee5;
@@ -27,6 +28,7 @@
   --override: #a8730a;
   --pick: #8a3fd1; --pick-bg: rgba(138, 63, 209, .10);
   --row-hover: #f3f6fa;
+  --shadow: 0 10px 40px rgba(20, 30, 50, .18);
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -40,7 +42,7 @@ header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; m
 h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 .meta { color: var(--muted); font-size: 12px; }
 .spacer { flex: 1; }
-button, select, input {
+button, select, input, textarea {
   font: inherit; color: var(--text); background: var(--surface);
   border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
 }
@@ -53,6 +55,7 @@ input[type="search"] { min-width: 200px; }
 .seg button { border: 0; border-radius: 0; background: var(--surface); color: var(--muted); }
 .seg button + button { border-left: 1px solid var(--border); }
 .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
+button.tgl[aria-pressed="true"] { background: var(--pick-bg); border-color: var(--pick); color: var(--text); }
 .banner {
   border: 1px solid var(--border); border-left: 3px solid var(--override);
   background: var(--surface); padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 12px;
@@ -61,26 +64,21 @@ input[type="search"] { min-width: 200px; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
 .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--faint); }
 .na { color: var(--faint); }
+.nop { color: var(--faint); opacity: .55; }
 .ov { color: var(--override); font-size: 9px; vertical-align: super; margin-left: 1px; }
-.alt, .unp { color: var(--override); font-size: 10px; font-weight: 600; margin-left: 3px; cursor: help; }
-.tag { font-size: 10px; color: var(--muted); border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; margin-left: 4px; }
+.alt { color: var(--override); font-size: 10px; font-weight: 600; margin-left: 3px; cursor: help; }
+.tag { font-size: 10px; color: var(--muted); border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; margin-left: 4px; white-space: nowrap; }
 [data-pick] { cursor: pointer; }
 [data-pick]:hover { outline: 1px dashed var(--pick); outline-offset: -2px; }
-.mine, td.mine { outline: 2px solid var(--pick) !important; outline-offset: -2px; background: var(--pick-bg); }
+.mine { outline: 2px solid var(--pick) !important; outline-offset: -2px; background: var(--pick-bg) !important; }
 .pickcell { color: var(--pick); font-weight: 600; }
-.an-toggle { cursor: pointer; color: var(--text); border-bottom: 1px dotted var(--faint); }
-.an-toggle .car { color: var(--faint); font-size: 9px; margin-left: 3px; }
-tr.detail td { text-align: left; white-space: normal; background: var(--surface-2); }
-.an-list { margin: 0; padding: 2px 0 2px 18px; font-size: 12px; }
-.an-list li { margin: 3px 0; }
-.an-list a { color: var(--accent); }
-.an-list .old { color: var(--faint); }
-button[aria-pressed="true"].tgl { background: var(--pick-bg); border-color: var(--pick); color: var(--text); }
+.ev-pos { color: var(--up); font-weight: 600; }
+.ev-neg { color: var(--muted); }
 
-/* ---------- desktop table ---------- */
+/* ---------- table ---------- */
 .table-wrap {
   border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
-  overflow: auto; max-height: calc(100vh - 190px);
+  overflow: auto; max-height: calc(100vh - 210px);
 }
 table { border-collapse: separate; border-spacing: 0; width: 100%; white-space: nowrap; }
 th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--border); }
@@ -88,22 +86,24 @@ thead th {
   position: sticky; z-index: 2; background: var(--surface-2); color: var(--muted);
   font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em;
 }
-thead tr:first-child th { top: 0; height: 28px; }
-thead tr:nth-child(2) th { top: 28px; cursor: pointer; user-select: none; }
+thead tr:first-child th { top: 0; height: 26px; }
+thead tr:nth-child(2) th { top: 26px; cursor: pointer; user-select: none; }
 thead tr:nth-child(2) th:hover { color: var(--text); }
 th.sorted { color: var(--text); }
 th .arrow { font-size: 9px; margin-left: 3px; }
 .grp { text-align: center; border-left: 1px solid var(--border); color: var(--text); }
 .bl { border-left: 1px solid var(--border); }
-td.team, th.team { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+td.team, th.team { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; box-shadow: 1px 0 0 var(--border); }
 thead th.team { z-index: 3; background: var(--surface-2); }
 td.team b { display: inline-block; min-width: 36px; }
 td.team span { color: var(--muted); }
 td.left, th.left { text-align: left; }
+tbody tr { cursor: pointer; }
 tbody tr:hover td { background: var(--row-hover); }
+tbody tr.sel td { background: var(--surface-2); }
 tr.group td {
   background: var(--surface-2); color: var(--text); font-weight: 600; text-align: left;
-  position: sticky; left: 0; font-size: 12px;
+  position: sticky; left: 0; font-size: 12px; cursor: default;
 }
 td.best-o { background: var(--best-o); }
 td.best-u { background: var(--best-u); }
@@ -114,6 +114,7 @@ td.tot.best-o.best-u { box-shadow: inset 2px 0 0 var(--best-o-line), inset -2px 
 .mv { font-size: 10px; margin-left: 3px; }
 td.cons { font-weight: 600; }
 .bk { color: var(--muted); font-size: 11px; margin-left: 4px; }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
 
 /* ---------- mobile cards ---------- */
 #cards { display: none; }
@@ -123,27 +124,57 @@ td.cons { font-weight: 600; }
   .table-wrap { display: none; }
   #cards { display: block; }
   .mobile-sort { display: flex; }
+  .view-seg { display: none; }
   input[type="search"] { min-width: 0; flex: 1 1 100%; }
   .controls > * { flex: 1 1 auto; }
 }
 .group-h { font-weight: 700; font-size: 13px; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-  padding: 10px 12px; margin-bottom: 10px;
+  padding: 10px 12px; margin-bottom: 10px; cursor: pointer;
 }
 .card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .card-h .nm { font-weight: 700; font-size: 14px; }
 .card-h .nm span { color: var(--muted); font-weight: 400; }
 .card-h .cd { color: var(--muted); font-size: 11px; white-space: nowrap; }
-.stats { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 8px; font-size: 12px; }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 12px; }
 .stats .k { color: var(--muted); }
-.card table { font-size: 12px; }
-.card th, .card td { padding: 4px 6px; }
-.card thead th { position: static; }
-.card td:first-child, .card th:first-child { text-align: left; }
-.best-line { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 12px; }
-.empty { padding: 24px; text-align: center; color: var(--muted); }
-footer { color: var(--faint); font-size: 11px; margin-top: 14px; }
+.card .bestrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.card .bestbox { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+.card .bestbox .k { color: var(--muted); font-size: 11px; display: block; }
+
+/* ---------- drawer / bottom sheet ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 20; display: none; }
+.scrim.on { display: block; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); z-index: 21;
+  background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow);
+  overflow-y: auto; padding: 14px 16px 24px; transform: translateX(105%); transition: transform .18s ease;
+}
+.drawer.on { transform: none; }
+@media (max-width: 767px) {
+  .drawer {
+    top: auto; left: 0; width: 100%; max-height: 88vh; border-left: 0; border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0; transform: translateY(105%);
+  }
+  .drawer::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: -4px auto 10px; }
+}
+.dr-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.dr-h h2 { font-size: 17px; margin: 0; }
+.dr-h h2 span { color: var(--muted); font-weight: 400; }
+.dr-h .x { margin-left: auto; padding: 2px 9px; font-size: 16px; line-height: 1.2; }
+.drawer h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 16px 0 6px; }
+.drawer table { font-size: 12px; }
+.drawer th, .drawer td { padding: 4px 6px; }
+.drawer thead th { position: static; }
+.drawer td:first-child, .drawer th:first-child { text-align: left; }
+.drawer tbody tr { cursor: default; }
+.drawer .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.src-list { margin: 0; padding: 0 0 0 18px; font-size: 12px; }
+.src-list li { margin: 4px 0; }
+.src-list a, .drawer a { color: var(--accent); }
+
+footer { color: var(--faint); font-size: 11px; margin-top: 14px; line-height: 1.6; }
 footer a { color: var(--muted); }
 </style>
 </head>
@@ -169,6 +200,10 @@ footer a { color: var(--muted); }
       <button type="button" data-group="conf" aria-pressed="false">Conference</button>
       <button type="button" data-group="div" aria-pressed="false">Division</button>
     </div>
+    <div class="seg view-seg" role="group" aria-label="Columns">
+      <button type="button" data-view="compact" aria-pressed="true">Compact</button>
+      <button type="button" data-view="full" aria-pressed="false">Full view</button>
+    </div>
     <button type="button" id="mine" class="tgl" aria-pressed="false">My picks only</button>
     <label class="mobile-sort">Sort
       <select id="msort"></select>
@@ -184,9 +219,17 @@ footer a { color: var(--muted); }
   <footer id="footer"></footer>
 </div>
 
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" aria-hidden="true"></aside>
+
 <script>
 (function () {
   "use strict";
+
+  // ------------------------------------------------------------ settings
+  // SIGMA: assumed SD (in wins) of a team's final wins around the market's
+  // expectation. An assumption (typical miss of preseason totals), not fitted.
+  var SIGMA = 8;
 
   // Canonical teams -- keep in sync with scraper/teams.py
   var TEAMS = [
@@ -230,6 +273,7 @@ footer a { color: var(--muted); }
     if (v === 0) return "0.0";
     return (v > 0 ? "+" : "−") + Math.abs(v).toFixed(1);
   }
+  function fmtEV(v) { return isNum(v) ? (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(1) + "%" : DASH; }
   function median(xs) {
     if (!xs.length) return null;
     var s = xs.slice().sort(function (a, b) { return a - b; });
@@ -243,20 +287,44 @@ footer a { color: var(--muted); }
   }
   // American odds -> profit per 1 unit staked
   function profit(a) { return a > 0 ? a / 100 : 100 / -a; }
+  function fmtTime(iso) {
+    if (!iso) return DASH;
+    var d = new Date(iso);
+    if (isNaN(d)) return esc(iso);
+    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? esc(iso) : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function sideLetter(side) { return side === "over" ? "o" : "u"; }
+
+  // ------------------------------------------------------------- storage
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* unavailable */ } }
+  function recall(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  // --------------------------------------------------------------- theme
+  function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    el("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
+  }
+  setTheme(recall("nbawt-theme") === "light" ? "light" : "dark");
+  el("theme").addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    setTheme(next);
+    store("nbawt-theme", next);
+  });
 
   // ---------------------------------------------------- best-line model
   // Comparing o48.5 -200 with o50.5 -105 needs a view on how likely each
-  // number is to land. Assumption: a team's final wins are roughly normal
-  // around the market's expectation (mu) with SD = SIGMA wins. SIGMA is an
-  // assumption (typical miss of preseason totals), not fitted -- change it here.
-  var SIGMA = 8;
+  // number is to land: final wins ~ Normal(mu, SIGMA), mu = market center.
   // Standard normal CDF (Abramowitz & Stegun 7.1.26 erf approximation)
   function phi(z) {
     var x = Math.abs(z) / Math.SQRT2, t = 1 / (1 + 0.3275911 * x);
     var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
     return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
   }
-  // Win/push probabilities for a side at total T, wins ~ N(mu, SIGMA), with continuity correction.
+  // Win/push probabilities for a side at total T, with continuity correction.
   function sideProbs(side, T, mu) {
     var whole = Math.round(T) === T;
     var hi = whole ? T + 0.5 : T, lo = whole ? T - 0.5 : T;
@@ -285,33 +353,6 @@ footer a { color: var(--muted); }
     if (row.cons !== null) return { mu: row.cons, basis: "consensus median (no two-sided price)" };
     return null;
   }
-  function fmtEV(v) { return isNum(v) ? (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(1) + "%" : DASH; }
-  function fmtTime(iso) {
-    if (!iso) return DASH;
-    var d = new Date(iso);
-    if (isNaN(d)) return esc(iso);
-    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
-  }
-  function fmtDate(iso) {
-    var d = new Date(iso);
-    return isNaN(d) ? esc(iso) : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  }
-
-  // ------------------------------------------------------------- storage
-  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* unavailable */ } }
-  function recall(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-
-  // --------------------------------------------------------------- theme
-  function setTheme(t) {
-    document.documentElement.setAttribute("data-theme", t);
-    el("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
-  }
-  setTheme(recall("nbawt-theme") === "light" ? "light" : "dark");
-  el("theme").addEventListener("click", function () {
-    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    setTheme(next);
-    store("nbawt-theme", next);
-  });
 
   // ---------------------------------------------------------- overrides
   // Mirrors scraper/core.py apply_overrides():
@@ -330,7 +371,7 @@ footer a { color: var(--muted); }
     var entries = (ov && Array.isArray(ov.overrides)) ? ov.overrides : [];
     entries.forEach(function (e, i) {
       if (!merged[e.team] || BOOKS.indexOf(e.book) < 0) {
-        warn("Override #" + i + " skipped: unknown team/book (" + e.team + " / " + e.book + ")");
+        warn("Override #" + i + " skipped: unknown team/book (" + esc(e.team) + " / " + esc(e.book) + ")");
         return;
       }
       var bad = FIELDS.filter(function (f) {
@@ -351,7 +392,7 @@ footer a { color: var(--muted); }
     return { merged: merged, src: src };
   }
 
-  // ---------------------------------------------------------------- model
+  // ---------------------------------------------------------------- rows
   function emptyBooks() {
     var o = {};
     TEAMS.forEach(function (t) {
@@ -360,11 +401,7 @@ footer a { color: var(--muted); }
     });
     return o;
   }
-
-  function moveDir(cur, open) {
-    if (!isNum(cur) || !isNum(open)) return null;
-    return cur - open;
-  }
+  function diff(cur, open) { return isNum(cur) && isNum(open) ? cur - open : null; }
 
   function buildRows(lines, ov, last, warn) {
     var scraped = emptyBooks();
@@ -388,7 +425,9 @@ footer a { color: var(--muted); }
         abbr: a, city: t[1], nickname: t[2], name: t[1] + " " + t[2], conf: t[3], div: t[4],
         lyW: lastTeams[a] && isNum(lastTeams[a].w) ? lastTeams[a].w : null,
         lyL: lastTeams[a] && isNum(lastTeams[a].l) ? lastTeams[a].l : null,
-        b: {}, an: [], anAll: [], anLatest: {}, anOver: 0, anUnder: 0, proj: null
+        pythW: null,
+        b: {}, an: [], anAll: [], anLatest: {}, anOver: 0, anUnder: 0, proj: null,
+        experts: [], expertAvg: null
       };
       var totals = [], openTotals = [];
       BOOKS.forEach(function (b) {
@@ -396,14 +435,13 @@ footer a { color: var(--muted); }
         var io = implied(cur.over), iu = implied(cur.under);
         var x = {
           total: cur.total, over: cur.over, under: cur.under, src: m.src[a][b], open: op,
-          // Scraper dropped this book's line as a suspected alternate; ignore once an override supplies a total
+          // Scraper dropped this book's line as a suspected alternate; ignored once an override supplies a total
           suspect: (!isNum(cur.total) && suspect[a + "|" + b]) || null,
           // No-vig: normalize the two implied probabilities to sum to 100%
           nvOver: (io !== null && iu !== null) ? io / (io + iu) : null,
           nvUnder: (io !== null && iu !== null) ? iu / (io + iu) : null,
-          mvTotal: op ? moveDir(cur.total, op.total) : null,
-          // Price movement measured in implied probability (only if the total hasn't moved,
-          // otherwise the prices are on different numbers and aren't comparable)
+          mvTotal: op ? diff(cur.total, op.total) : null,
+          // Price movement in implied probability, only when the total hasn't moved
           mvOver: (op && cur.total === op.total && implied(op.over) !== null && io !== null) ? io - implied(op.over) : null,
           mvUnder: (op && cur.total === op.total && implied(op.under) !== null && iu !== null) ? iu - implied(op.under) : null
         };
@@ -414,8 +452,8 @@ footer a { color: var(--muted); }
       row.nBooks = totals.length;
       row.cons = median(totals);
       row.consOpen = median(openTotals);
-      row.consMove = (row.cons !== null && row.consOpen !== null) ? row.cons - row.consOpen : null;
-      row.delta = (row.cons !== null && row.lyW !== null) ? row.cons - row.lyW : null;
+      row.consMove = diff(row.cons, row.consOpen);
+      row.delta = diff(row.cons, row.lyW);
 
       row.mkt = marketMu(row);
       BOOKS.forEach(function (b) {
@@ -431,36 +469,23 @@ footer a { color: var(--muted); }
     });
   }
 
-  // Best side = highest model EV among books with a total AND a price for that side.
-  // Same total -> EV order is just price order, so price is the tiebreaker there.
-  // Books with a total but no price can't be ranked; if their number is better
-  // than the winner's (lower for overs, higher for unders) they're listed as
-  // "unpriced" so they aren't silently ignored.
+  // Best side = highest market EV among books with a total AND a price for that
+  // side. Same total -> EV order is just price order. Books with no price for a
+  // side can't be ranked and are left out (shown muted in the full view).
   function best(row, side) {
     var key = "ev" + side;
     var priced = BOOKS.filter(function (b) { return row.b[b][key] !== null; });
-    var res = null;
-    if (priced.length) {
-      priced.sort(function (p, q) { return row.b[q][key] - row.b[p][key]; });
-      var top = row.b[priced[0]];
-      res = {
-        total: top.total, price: top[side], ev: top[key], pwin: top["pw" + side],
-        books: priced.filter(function (b) { return row.b[b].total === top.total && row.b[b][side] === top[side]; })
-      };
-    }
-    var better = function (t) { return !res || (side === "over" ? t < res.total : t > res.total); };
-    var unpriced = BOOKS.filter(function (b) {
-      var x = row.b[b];
-      return isNum(x.total) && !isNum(x[side]) && better(x.total);
-    });
-    if (!res && !unpriced.length) return null;
-    res = res || { total: null, price: null, ev: null, books: [] };
-    res.unpriced = unpriced;
-    return res;
+    if (!priced.length) return null;
+    priced.sort(function (p, q) { return row.b[q][key] - row.b[p][key]; });
+    var top = row.b[priced[0]];
+    return {
+      side: side, total: top.total, price: top[side], ev: top[key], pwin: top["pw" + side],
+      books: priced.filter(function (b) { return row.b[b].total === top.total && row.b[b][side] === top[side]; })
+    };
   }
 
-  // Analyst picks: every record is listed in the expanded view, but the tally
-  // counts each analyst once per team (their most recent pick by date).
+  // Analyst picks: every record is listed in the drawer; the tally counts each
+  // analyst once per team (their most recent pick by date).
   function attachAnalysts(rows, doc) {
     var by = {};
     rows.forEach(function (r) { by[r.abbr] = r; });
@@ -484,57 +509,143 @@ footer a { color: var(--muted); }
     rows.forEach(function (r) { r.proj = by[r.abbr] || null; });
   }
 
-  // -------------------------------------------------------------- columns
-  // Each column: key, label, sort value getter, desktop cell renderer.
+  // ------------------------------------------------------------ my picks
+  // { ABBR: { side, book, total, price, at } } -- the line/price as of tagging,
+  // so a pick keeps the number you liked after a rescrape.
+  var TEAM_SET = {};
+  TEAMS.forEach(function (t) { TEAM_SET[t[0]] = true; });
+  function cleanPicks(o) {
+    var out = {};
+    Object.keys(o || {}).forEach(function (k) {
+      var p = o[k];
+      if (TEAM_SET[k] && p && (p.side === "over" || p.side === "under") && BOOKS.indexOf(p.book) >= 0 && isNum(p.total)) {
+        out[k] = { side: p.side, book: p.book, total: p.total, price: isNum(p.price) ? p.price : null, at: p.at || null };
+      }
+    });
+    return out;
+  }
+  function loadJSONStore(key) {
+    try { return JSON.parse(recall(key) || "null"); } catch (e) { return null; }
+  }
+  var PICKS = cleanPicks(loadJSONStore("nbawt-picks"));
+  function savePicks() { store("nbawt-picks", JSON.stringify(PICKS)); }
+
+  // -------------------------------------------------------------- cells
   function mvSpan(d, isPrice, title) {
-    if (d === null) return "";
-    if (Math.abs(d) < 1e-9) return "";
+    if (d === null || Math.abs(d) < 1e-9) return "";
     var up = d > 0;
     var txt = isPrice ? (up ? "▲" : "▼") : (up ? "▲" : "▼") + Math.abs(d).toFixed(1).replace(/\.0$/, "");
     return '<span class="mv ' + (up ? "up" : "down") + '" title="' + esc(title) + '">' + txt + "</span>";
   }
   function ovMark(s) { return s === "override" ? '<span class="ov" title="Manual override">&#9679;</span>' : ""; }
   function val(txt) { return txt === DASH ? '<span class="na">' + DASH + "</span>" : txt; }
+  function signedCell(v) {
+    if (!isNum(v)) return val(DASH);
+    return '<span class="' + (v > 0 ? "up" : v < 0 ? "down" : "flat") + '">' + fmtSigned(v) + "</span>";
+  }
+  function consMoveCell(v) {
+    if (!isNum(v)) return val(DASH);
+    if (v === 0) return '<span class="flat">0.0</span>';
+    return '<span class="' + (v > 0 ? "up" : "down") + '">' + (v > 0 ? "▲" : "▼") + Math.abs(v).toFixed(1) + "</span>";
+  }
+  function altMark(sp) {
+    if (!sp) return "";
+    var t = "VegasInsider showed o" + fmtTotal(sp.total) + " " + fmtOdds(sp.over) + ", " + fmtSigned(sp.total - sp.others_median) +
+      " wins off the other books' median (" + fmtTotal(sp.others_median) + "). Excluded as a suspected alternate line. " +
+      "Add the main line in manual_overrides.json.";
+    return '<span class="alt" title="' + esc(t) + '">alt?</span>';
+  }
+  function modelTitle(r, x, side) {
+    if (!r.mkt || !isNum(x.total)) return "";
+    var t = "Market model: " + fmtPct(x["pw" + side]) + " to cash " + sideLetter(side) + fmtTotal(x.total);
+    t += x["ev" + side] !== null ? ", Market EV " + fmtEV(x["ev" + side]) : ", no price published";
+    return t + " (center " + r.mkt.mu.toFixed(1) + " from " + r.mkt.basis + ", SD " + SIGMA + "). Click to tag as my pick.";
+  }
+  // A price cell. Book has a line but no price for this side -> muted dash (see legend).
+  function priceCell(r, b, side) {
+    var x = r.b[b];
+    var t = x.open ? "First tracked: " + sideLetter(side) + fmtTotal(x.open.total) + " " + fmtOdds(x.open[side]) : "";
+    var inner = isNum(x[side]) ? fmtOdds(x[side]) : isNum(x.total) ? '<span class="nop">' + DASH + "</span>" : val(DASH);
+    return '<span title="' + esc(modelTitle(r, x, side)) + '">' + inner + "</span>" +
+      ovMark(x.src[side]) + mvSpan(side === "over" ? x.mvOver : x.mvUnder, true, t);
+  }
+  function pickAttrs(abbr, b, side, total) {
+    if (!isNum(total)) return "";
+    return ' data-pick="' + abbr + "|" + b + "|" + side + '" tabindex="0" role="button"';
+  }
+  function isMine(abbr, b, side) {
+    var p = PICKS[abbr];
+    return !!(p && p.book === b && p.side === side);
+  }
+  function bestCell(bst) {
+    if (!bst) return val(DASH);
+    return sideLetter(bst.side) + fmtTotal(bst.total) + " " + fmtOdds(bst.price) +
+      '<span class="bk">' + bst.books.map(function (b) { return BOOK_SHORT[b]; }).join("/") + "</span>";
+  }
+  function evCell(bst) {
+    if (!bst) return val(DASH);
+    return '<span class="' + (bst.ev > 0 ? "ev-pos" : "ev-neg") + '" title="' + fmtPct(bst.pwin) + ' to cash">' +
+      (bst.side === "over" ? "O " : "U ") + fmtEV(bst.ev) + "</span>";
+  }
+  function myPickCell(r) {
+    var p = PICKS[r.abbr];
+    if (!p) return val(DASH);
+    var now = r.b[p.book].total;
+    var h = '<span class="pickcell" title="Tagged ' + esc(fmtTime(p.at)) + " at " + sideLetter(p.side) +
+      fmtTotal(p.total) + " " + fmtOdds(p.price) + '">' + (p.side === "over" ? "O " : "U ") + fmtTotal(p.total) + " " + BOOK_SHORT[p.book] + "</span>" +
+      '<span class="bk">' + fmtOdds(p.price) + "</span>";
+    if (now !== p.total) h += '<span class="tag" title="' + BOOK_NAME[p.book] + ' line has moved since you tagged it">now ' + fmtTotal(now) + "</span>";
+    return h;
+  }
+  function analystCell(r) {
+    if (!r.an.length) return "";
+    var o = r.anOver, u = r.anUnder;
+    return o > u ? "Over " + o + "-" + u : u > o ? "Under " + u + "-" + o : "Split " + o + "-" + u;
+  }
+  function projCell(r) {
+    if (!r.proj) return val(DASH);
+    var d = r.cons !== null ? r.proj.projected_wins - r.cons : null;
+    return '<span title="' + esc(r.proj.system + " · " + r.proj.date) + '">' + r.proj.projected_wins.toFixed(1) + "</span>" +
+      (d === null ? "" : " / " + signedCell(d));
+  }
+  function expertCell(r) {
+    if (r.expertAvg === null) return val(DASH);
+    return r.expertAvg.toFixed(1) + ' <span class="bk">(' + r.experts.length + ")</span>";
+  }
 
+  // ------------------------------------------------------------ columns
+  // view: "both" = compact + full, "full" = full view only.
+  // grp drives the top header row.
   function bookCols(b) {
-    var sh = BOOK_SHORT[b];
     return [
-      { key: b + ".total", label: "Tot", grp: b, cls: "bl tot",
+      { key: b + ".total", label: "Tot", grp: b, view: "full", cls: "bl tot",
         get: function (r) { return r.b[b].total; },
         cell: function (r) {
           var x = r.b[b];
           var t = x.open ? "First tracked: " + fmtTotal(x.open.total) : "";
           return val(fmtTotal(x.total)) + ovMark(x.src.total) + mvSpan(x.mvTotal, false, t) + altMark(x.suspect);
         },
-        best: function (r) {
+        tdcls: function (r) {
           var c = [];
           if (r.bestOver && r.bestOver.books.indexOf(b) >= 0) c.push("best-o");
           if (r.bestUnder && r.bestUnder.books.indexOf(b) >= 0) c.push("best-u");
           return c.join(" ");
         } },
-      { key: b + ".over", label: "O", grp: b,
+      { key: b + ".over", label: "O", grp: b, view: "full",
         get: function (r) { return r.b[b].over; },
-        cell: function (r) {
-          var x = r.b[b];
-          var t = x.open ? "First tracked: o" + fmtTotal(x.open.total) + " " + fmtOdds(x.open.over) : "";
-          return '<span title="' + esc(modelTitle(r, x, "over")) + '">' + val(fmtOdds(x.over)) + "</span>" +
-            ovMark(x.src.over) + mvSpan(x.mvOver, true, t) + unpMark(r, b, "over");
+        cell: function (r) { return priceCell(r, b, "over"); },
+        tdcls: function (r) {
+          return (r.bestOver && r.bestOver.books.indexOf(b) >= 0 ? "best-o " : "") + (isMine(r.abbr, b, "over") ? "mine" : "");
         },
-        best: function (r) { return r.bestOver && r.bestOver.books.indexOf(b) >= 0 && isNum(r.b[b].over) ? "best-o" : ""; },
-        mark: function (r) { return pickMark(r, b, "over"); },
-        attrs: function (r) { return pickAttrs(r, b, "over"); } },
-      { key: b + ".under", label: "U", grp: b,
+        attrs: function (r) { return pickAttrs(r.abbr, b, "over", r.b[b].total); } },
+      { key: b + ".under", label: "U", grp: b, view: "full",
         get: function (r) { return r.b[b].under; },
-        cell: function (r) {
-          var x = r.b[b];
-          var t = x.open ? "First tracked: u" + fmtTotal(x.open.total) + " " + fmtOdds(x.open.under) : "";
-          return '<span title="' + esc(modelTitle(r, x, "under")) + '">' + val(fmtOdds(x.under)) + "</span>" +
-            ovMark(x.src.under) + mvSpan(x.mvUnder, true, t) + unpMark(r, b, "under");
+        cell: function (r) { return priceCell(r, b, "under"); },
+        tdcls: function (r) {
+          return (r.bestUnder && r.bestUnder.books.indexOf(b) >= 0 ? "best-u " : "") + (isMine(r.abbr, b, "under") ? "mine" : "");
         },
-        best: function (r) { return r.bestUnder && r.bestUnder.books.indexOf(b) >= 0 && isNum(r.b[b].under) ? "best-u" : ""; },
-        mark: function (r) { return pickMark(r, b, "under"); },
-        attrs: function (r) { return pickAttrs(r, b, "under"); } },
-      { key: b + ".nv", label: "NV O", grp: b, title: sh + " no-vig over probability",
+        attrs: function (r) { return pickAttrs(r.abbr, b, "under", r.b[b].total); } },
+      { key: b + ".nv", label: "NV O", grp: b, view: "full", title: BOOK_SHORT[b] + " no-vig over probability",
         get: function (r) { return r.b[b].nvOver; },
         cell: function (r) {
           var x = r.b[b];
@@ -543,178 +654,90 @@ footer a { color: var(--muted); }
         } }
     ];
   }
-
-  function altMark(sp) {
-    if (!sp) return "";
-    var t = "VegasInsider showed o" + fmtTotal(sp.total) + " " + fmtOdds(sp.over) + ", " + fmtSigned(sp.total - sp.others_median) +
-      " wins off the other books' median (" + fmtTotal(sp.others_median) + "). Excluded as a suspected alternate line. " +
-      "Add the main line in manual_overrides.json.";
-    return '<span class="alt" title="' + esc(t) + '">alt?</span>';
-  }
-  // "?" on a cell whose number beats the best line but has no price, so it couldn't be compared
-  function unpMark(r, b, side) {
-    var bst = side === "over" ? r.bestOver : r.bestUnder;
-    if (!bst || bst.unpriced.indexOf(b) < 0) return "";
-    return '<span class="unp" title="' + esc(BOOK_NAME[b] + " has " + (side === "over" ? "o" : "u") + fmtTotal(r.b[b].total) +
-      ", a better number than the best priced line, but no " + side + " price is published, so it can't be value-compared.") + '">?</span>';
-  }
-  function modelTitle(r, x, side) {
-    if (!r.mkt || !isNum(x.total)) return "";
-    var t = "Model: " + fmtPct(x["pw" + side]) + " to cash " + (side === "over" ? "o" : "u") + fmtTotal(x.total);
-    t += x["ev" + side] !== null ? ", EV " + fmtEV(x["ev" + side]) : ", no price";
-    return t + " (center " + r.mkt.mu.toFixed(1) + " from " + r.mkt.basis + ", SD " + SIGMA + " wins). Click to tag as my pick.";
-  }
-  function bestCell(bst, side) {
-    if (!bst) return val(DASH);
-    var h = val(DASH);
-    if (bst.books.length) {
-      h = '<span title="Model EV ' + fmtEV(bst.ev) + ", " + fmtPct(bst.pwin) + ' to cash">' + (side === "over" ? "o" : "u") +
-        fmtTotal(bst.total) + " " + fmtOdds(bst.price) + "</span>" +
-        '<span class="bk">' + bst.books.map(function (b) { return BOOK_SHORT[b]; }).join("/") + "</span>";
-    }
-    if (bst.unpriced.length) {
-      var lst = bst.unpriced.map(function (b) { return BOOK_SHORT[b]; }).join("/");
-      h += '<span class="unp" title="' + esc(lst + " has a better number but no " + side + " price, so it isn't ranked") + '">+' + lst + "?</span>";
-    }
-    return h;
-  }
-
-  // ------------------------------------------------------------ my picks
-  function pickMark(r, b, side) {
-    var p = PICKS[r.abbr];
-    return p && p.book === b && p.side === side ? "mine" : "";
-  }
-  function pickAttrs(r, b, side) {
-    if (!isNum(r.b[b].total)) return "";
-    return ' data-pick="' + r.abbr + "|" + b + "|" + side + '" tabindex="0" role="button"';
-  }
-  function myPickCell(r) {
-    var p = PICKS[r.abbr];
-    if (!p) return val(DASH);
-    var now = r.b[p.book].total;
-    var h = '<span class="pickcell" title="Tagged ' + esc(fmtTime(p.at)) + " at " + (p.side === "over" ? "o" : "u") +
-      fmtTotal(p.total) + " " + fmtOdds(p.price) + '">' + (p.side === "over" ? "O " : "U ") + fmtTotal(p.total) + " " + BOOK_SHORT[p.book] + "</span>" +
-      '<span class="bk">' + fmtOdds(p.price) + "</span>";
-    if (now !== p.total) h += '<span class="tag" title="' + BOOK_NAME[p.book] + ' line has moved since you tagged it">now ' + fmtTotal(now) + "</span>";
-    return h;
-  }
-
-  // ------------------------------------------------------------- analysts
-  function analystCell(r) {
-    if (!r.an.length) return "";
-    var o = r.anOver, u = r.anUnder;
-    var lbl = o > u ? "Over " + o + "-" + u : u > o ? "Under " + u + "-" + o : "Split " + o + "-" + u;
-    return '<span class="an-toggle" data-an="' + r.abbr + '" role="button" tabindex="0" aria-expanded="' + !!OPEN[r.abbr] + '">' +
-      lbl + '<span class="car">' + (OPEN[r.abbr] ? "▾" : "▸") + "</span></span>";
-  }
-  function analystDetail(r) {
-    var h = '<ul class="an-list">';
-    r.anAll.forEach(function (p) {
-      var cur = r.anLatest[p.analyst] === p;
-      h += "<li" + (cur ? "" : ' class="old"') + "><b>" + esc(p.analyst) + "</b> " + (p.side === "over" ? "Over" : "Under") +
-        (isNum(p.line) ? " " + fmtTotal(p.line) : "") +
-        (isNum(p.line) && r.cons !== null && p.line !== r.cons ? ' <span class="tag">their line ' + fmtTotal(p.line) + " · consensus now " + fmtTotal(r.cons) + "</span>" : "") +
-        (p.basis === "derived_from_wl_prediction" ? ' <span class="tag" title="Side derived from his predicted W-L vs the line he quoted; not stated outright">from W-L prediction</span>' : "") +
-        (cur ? "" : ' <span class="tag">superseded by a later pick</span>') +
-        " · " + fmtDate(p.date + "T12:00:00") + ' · <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a>" +
-        (p.timestamp ? " @" + esc(p.timestamp) : "") + " — " + esc(p.summary) + "</li>";
-    });
-    return h + "</ul>";
-  }
-
-  // ---------------------------------------------------------- projections
-  function projCell(r) {
-    if (!r.proj) return val(DASH);
-    var d = r.cons !== null ? r.proj.projected_wins - r.cons : null;
-    return '<span title="' + esc(r.proj.system + " · " + r.proj.date) + '">' + r.proj.projected_wins.toFixed(1) + "</span>" +
-      (d === null ? "" : ' / <span class="' + (d > 0 ? "up" : d < 0 ? "down" : "flat") + '">' + fmtSigned(d) + "</span>");
-  }
-  function signedCell(v) {
-    if (!isNum(v)) return val(DASH);
-    var c = v > 0 ? "up" : v < 0 ? "down" : "flat";
-    return '<span class="' + c + '">' + fmtSigned(v) + "</span>";
-  }
-  function consMoveCell(v) {
-    if (!isNum(v)) return val(DASH);
-    if (v === 0) return '<span class="flat">0.0</span>';
-    return '<span class="' + (v > 0 ? "up" : "down") + '">' + (v > 0 ? "▲" : "▼") + Math.abs(v).toFixed(1) + "</span>";
+  function bestCol(side) {
+    var k = side === "over" ? "bestOver" : "bestUnder";
+    return [
+      { key: k, label: "Line", grp: k, view: "both", cls: "bl", title: "Best " + side + " across books by Market EV; ties = better price",
+        get: function (r) { return r[k] ? r[k].total : null; },
+        cell: function (r) { return bestCell(r[k]); },
+        tdcls: function (r) { var bst = r[k]; return bst && isMine(r.abbr, bst.books[0], side) ? "mine" : ""; },
+        attrs: function (r) { var bst = r[k]; return bst ? pickAttrs(r.abbr, bst.books[0], side, bst.total) : ""; } },
+      { key: k + "EV", label: "Market EV", grp: k, view: "both",
+        title: "Expected value of the best " + side + " vs the market's own center (FanDuel no-vig). Line-shopping value, not a forecast.",
+        get: function (r) { return r[k] ? r[k].ev : null; },
+        cell: function (r) { return evCell(r[k]); } }
+    ];
   }
 
   var COLS = [
-    { key: "team", label: "Team", cls: "team", get: function (r) { return r.name; },
+    { key: "team", label: "Team", cls: "team", view: "both", get: function (r) { return r.name; },
       cell: function (r) { return "<b>" + r.abbr + "</b> <span>" + esc(r.city) + " " + esc(r.nickname) + "</span>"; } },
-    { key: "div", label: "Div", cls: "left", get: function (r) { return r.conf + DIV_ORDER.indexOf(r.div); },
+    { key: "div", label: "Div", cls: "left", view: "both", get: function (r) { return r.conf + DIV_ORDER.indexOf(r.div); },
       cell: function (r) { return '<span class="na">' + r.conf + " · </span>" + r.div; } },
-    { key: "ly", label: "25-26", title: "2025-26 final regular season record", get: function (r) { return r.lyW; },
-      cell: function (r) { return r.lyW === null ? val(DASH) : r.lyW + "-" + r.lyL; } }
-  ];
-  BOOKS.forEach(function (b) { COLS = COLS.concat(bookCols(b)); });
-  COLS = COLS.concat([
-    { key: "cons", label: "Line", grp: "cons", cls: "bl cons", title: "Consensus: median total across available books",
+    { key: "ly", label: "25-26", view: "both", title: "2025-26 final regular season record", get: function (r) { return r.lyW; },
+      cell: function (r) { return r.lyW === null ? val(DASH) : r.lyW + "-" + r.lyL; } },
+    { key: "pyth", label: "Pyth W", view: "both", title: "2025-26 Pythagorean (expected) wins, Basketball-Reference",
+      get: function (r) { return r.pythW; },
+      cell: function (r) { return isNum(r.pythW) ? String(r.pythW) : val(DASH); } },
+    { key: "cons", label: "Line", grp: "cons", view: "both", cls: "bl cons", title: "Consensus: median total across available books",
       get: function (r) { return r.cons; },
       cell: function (r) { return val(fmtTotal(r.cons)) + (r.nBooks && r.nBooks < 4 ? '<span class="bk" title="Books in consensus">' + r.nBooks + "bk</span>" : ""); } },
-    { key: "consMove", label: "Move", grp: "cons", title: "Consensus movement",
+    { key: "consMove", label: "Move", grp: "cons", view: "both", title: "Consensus movement since first tracked",
       get: function (r) { return r.consMove; }, cell: function (r) { return consMoveCell(r.consMove); } },
-    { key: "delta", label: "vs LY", grp: "cons", title: "Consensus line minus 2025-26 wins",
-      get: function (r) { return r.delta; }, cell: function (r) { return signedCell(r.delta); } },
-    { key: "bestOver", label: "Best over", grp: "best", cls: "bl", title: "Best over by model EV (sorts by EV)",
-      get: function (r) { return r.bestOver ? r.bestOver.ev : null; },
-      cell: function (r) { return bestCell(r.bestOver, "over"); } },
-    { key: "bestUnder", label: "Best under", grp: "best", title: "Best under by model EV (sorts by EV)",
-      get: function (r) { return r.bestUnder ? r.bestUnder.ev : null; },
-      cell: function (r) { return bestCell(r.bestUnder, "under"); } },
-    { key: "mine", label: "My pick", grp: "picks", cls: "bl left", title: "Your tagged pick (sorts overs before unders, then by line)",
+    { key: "delta", label: "vs LY", grp: "cons", view: "both", title: "Consensus line minus 2025-26 wins",
+      get: function (r) { return r.delta; }, cell: function (r) { return signedCell(r.delta); } }
+  ];
+  BOOKS.forEach(function (b) { COLS = COLS.concat(bookCols(b)); });
+  COLS = COLS.concat(bestCol("over"), bestCol("under"), [
+    { key: "expert", label: "Expert W", grp: "ctx", view: "both", cls: "bl", title: "Average of published expert win numbers (source count)",
+      get: function (r) { return r.expertAvg; }, cell: expertCell },
+    { key: "rec", label: "Rec", grp: "ctx", view: "both", cls: "left", title: "Expert average vs consensus line",
+      get: function () { return null; }, cell: function () { return val(DASH); } },
+    { key: "an", label: "Analysts", grp: "ctx", view: "both", cls: "left",
+      title: "Stated analyst sides, one per analyst (latest pick). Sorts by net lean: overs minus unders",
+      get: function (r) { return r.an.length ? r.anOver - r.anUnder : null; }, cell: analystCell },
+    { key: "proj", label: "Proj", grp: "ctx", view: "full", title: "Projected wins / difference vs consensus line (sorts by difference)",
+      get: function (r) { return r.proj && r.cons !== null ? r.proj.projected_wins - r.cons : null; }, cell: projCell },
+    { key: "mine", label: "My pick", grp: "me", view: "both", cls: "bl left", title: "Your tagged pick (sorts overs before unders, then by line)",
       get: function (r) { var p = PICKS[r.abbr]; return p ? (p.side === "over" ? 0 : 100) + p.total : null; },
-      cell: myPickCell },
-    { key: "an", label: "Analysts", grp: "picks", cls: "left", title: "Analyst sides, one per analyst (latest pick). Sorts by net lean: overs minus unders",
-      get: function (r) { return r.an.length ? r.anOver - r.anUnder : null; },
-      cell: analystCell },
-    { key: "proj", label: "Proj", grp: "picks", title: "Projected wins / difference vs consensus line (sorts by difference)",
-      get: function (r) { return r.proj && r.cons !== null ? r.proj.projected_wins - r.cons : null; },
-      cell: projCell }
+      cell: myPickCell }
   ]);
   var COL_BY_KEY = {};
   COLS.forEach(function (c) { COL_BY_KEY[c.key] = c; });
+  var GRP_LABEL = { cons: "Consensus", bestOver: "Best over", bestUnder: "Best under", ctx: "Experts", me: "Mine" };
+  function sortLabel(c) {
+    if (BOOK_NAME[c.grp]) return BOOK_NAME[c.grp] + " " + c.label;
+    if (c.grp === "cons") return "Consensus " + c.label;
+    if (c.grp === "bestOver" || c.grp === "bestUnder") return GRP_LABEL[c.grp] + " " + c.label;
+    if (c.key === "an") return "Analysts (net lean)";
+    if (c.key === "proj") return "Proj vs line";
+    return c.label;
+  }
 
   // ---------------------------------------------------------------- state
-  var state = { q: "", conf: "", div: "", group: "flat", sort: "cons", dir: -1, mine: false };
-  var saved = recall("nbawt-view");
-  if (saved) {
-    try {
-      var s = JSON.parse(saved);
-      if (COL_BY_KEY[s.sort]) state.sort = s.sort;
-      if (s.dir === 1 || s.dir === -1) state.dir = s.dir;
-      if (["flat", "conf", "div"].indexOf(s.group) >= 0) state.group = s.group;
-      state.mine = s.mine === true;
-    } catch (e) { /* ignore */ }
+  var state = { q: "", conf: "", div: "", group: "flat", sort: "cons", dir: -1, mine: false, view: "compact", drawer: null };
+  (function () {
+    var s = loadJSONStore("nbawt-view");
+    if (!s) return;
+    if (COL_BY_KEY[s.sort]) state.sort = s.sort;
+    if (s.dir === 1 || s.dir === -1) state.dir = s.dir;
+    if (["flat", "conf", "div"].indexOf(s.group) >= 0) state.group = s.group;
+    if (s.view === "full") state.view = "full";
+    state.mine = s.mine === true;
+  })();
+  function persist() {
+    store("nbawt-view", JSON.stringify({ sort: state.sort, dir: state.dir, group: state.group, mine: state.mine, view: state.view }));
   }
-  function persist() { store("nbawt-view", JSON.stringify({ sort: state.sort, dir: state.dir, group: state.group, mine: state.mine })); }
-
-  // My picks: { ABBR: { side, book, total, price, at } } -- the line/price as of tagging,
-  // so a pick keeps the number you liked after a rescrape.
-  var TEAM_SET = {};
-  TEAMS.forEach(function (t) { TEAM_SET[t[0]] = true; });
-  function loadPicks() {
-    var out = {};
-    try {
-      var o = JSON.parse(recall("nbawt-picks") || "{}");
-      Object.keys(o).forEach(function (k) {
-        var p = o[k];
-        if (TEAM_SET[k] && p && (p.side === "over" || p.side === "under") && BOOKS.indexOf(p.book) >= 0 && isNum(p.total)) {
-          out[k] = { side: p.side, book: p.book, total: p.total, price: isNum(p.price) ? p.price : null, at: p.at || null };
-        }
-      });
-    } catch (e) { /* corrupt or unavailable -> start empty */ }
-    return out;
+  function visibleCols() {
+    var mobile = window.matchMedia("(max-width: 767px)").matches;
+    return COLS.filter(function (c) { return c.view === "both" || (state.view === "full" && !mobile); });
   }
-  var PICKS = loadPicks();
-  var OPEN = {};  // analyst rows expanded
 
-  var ROWS = [], LINES = null;
+  var ROWS = [], ROW_BY = {};
 
   // -------------------------------------------------------------- sorting
   function sortRows(rows) {
-    var col = COL_BY_KEY[state.sort];
+    var col = COL_BY_KEY[state.sort] || COL_BY_KEY.cons;
     return rows.slice().sort(function (p, q) {
       var a = col.get(p), b = col.get(q);
       var an = a === null || a === undefined, bn = b === null || b === undefined;
@@ -725,7 +748,6 @@ footer a { color: var(--muted); }
       return c * state.dir || (p.name < q.name ? -1 : 1);
     });
   }
-
   function filtered() {
     var q = state.q.trim().toLowerCase();
     return ROWS.filter(function (r) {
@@ -736,7 +758,6 @@ footer a { color: var(--muted); }
       return true;
     });
   }
-
   function grouped(rows) {
     if (state.group === "flat") return [{ label: null, rows: sortRows(rows) }];
     var keys = state.group === "conf" ? ["East", "West"] : DIV_ORDER;
@@ -748,22 +769,21 @@ footer a { color: var(--muted); }
   }
 
   // ------------------------------------------------------------ rendering
-  function renderTable(groups) {
+  function renderTable(groups, cols) {
     var h = "<thead><tr>";
-    // Group header spans, derived from each column's grp
     var spans = [];
-    COLS.forEach(function (c) {
+    cols.forEach(function (c) {
       var g = c.grp || "";
       if (spans.length && spans[spans.length - 1].g === g) spans[spans.length - 1].n++;
       else spans.push({ g: g, n: 1 });
     });
-    var GRP_LABEL = { cons: "Consensus", best: "Best available (model EV)", picks: "Picks & projections" };
-    spans.forEach(function (sp) {
+    spans.forEach(function (sp, i) {
       var lbl = BOOK_NAME[sp.g] || GRP_LABEL[sp.g] || "";
-      h += lbl ? '<th class="grp" colspan="' + sp.n + '">' + lbl + "</th>" : '<th class="team" colspan="' + sp.n + '"></th>';
+      h += lbl ? '<th class="grp" colspan="' + sp.n + '">' + lbl + "</th>"
+               : '<th class="' + (i === 0 ? "team" : "") + '" colspan="' + sp.n + '"></th>';
     });
     h += "</tr><tr>";
-    COLS.forEach(function (c) {
+    cols.forEach(function (c) {
       var sorted = state.sort === c.key;
       h += '<th data-key="' + c.key + '" class="' + (c.cls || "") + (sorted ? " sorted" : "") + '"' +
         (c.title ? ' title="' + esc(c.title) + '"' : "") +
@@ -773,70 +793,143 @@ footer a { color: var(--muted); }
     h += "</tr></thead><tbody>";
     var n = 0;
     groups.forEach(function (g) {
-      if (g.label) h += '<tr class="group"><td colspan="' + COLS.length + '">' + g.label + " (" + g.rows.length + ")</td></tr>";
+      if (g.label) h += '<tr class="group"><td colspan="' + cols.length + '">' + g.label + " (" + g.rows.length + ")</td></tr>";
       g.rows.forEach(function (r) {
         n++;
-        h += "<tr>";
-        COLS.forEach(function (c) {
-          var cls = [c.cls || "", c.best ? c.best(r) : "", c.mark ? c.mark(r) : ""].join(" ").trim();
+        h += '<tr tabindex="0" data-team="' + r.abbr + '"' + (state.drawer === r.abbr ? ' class="sel"' : "") + ">";
+        cols.forEach(function (c) {
+          var cls = [c.cls || "", c.tdcls ? c.tdcls(r) : ""].join(" ").trim();
           h += "<td" + (cls ? ' class="' + cls + '"' : "") + (c.attrs ? c.attrs(r) : "") + ">" + c.cell(r) + "</td>";
         });
         h += "</tr>";
-        if (OPEN[r.abbr] && r.an.length) h += '<tr class="detail"><td colspan="' + COLS.length + '">' + analystDetail(r) + "</td></tr>";
       });
     });
-    if (!n) h += '<tr><td class="empty" colspan="' + COLS.length + '">No teams match.</td></tr>';
-    h += "</tbody>";
-    el("tbl").innerHTML = h;
+    if (!n) h += '<tr><td class="empty" colspan="' + cols.length + '">No teams match.</td></tr>';
+    el("tbl").innerHTML = h + "</tbody>";
   }
 
+  function cardBest(r, bst, side) {
+    var lbl = side === "over" ? "Best over" : "Best under";
+    if (!bst) return '<div class="bestbox"><span class="k">' + lbl + "</span>" + val(DASH) + "</div>";
+    return '<div class="bestbox' + (isMine(r.abbr, bst.books[0], side) ? " mine" : "") + '"' + pickAttrs(r.abbr, bst.books[0], side, bst.total) + ">" +
+      '<span class="k">' + lbl + "</span>" + bestCell(bst) + " · " + evCell(bst) + "</div>";
+  }
   function renderCards(groups) {
     var h = "", n = 0;
     groups.forEach(function (g) {
       if (g.label) h += '<div class="group-h">' + g.label + "</div>";
       g.rows.forEach(function (r) {
         n++;
-        h += '<div class="card"><div class="card-h"><div class="nm">' + r.abbr + " <span>" + esc(r.name) + "</span></div>" +
+        h += '<div class="card" data-team="' + r.abbr + '"><div class="card-h"><div class="nm">' + r.abbr + " <span>" + esc(r.name) + "</span></div>" +
           '<div class="cd">' + r.conf + " · " + r.div + "</div></div>";
         h += '<div class="stats">' +
           '<span><span class="k">25-26 </span>' + (r.lyW === null ? DASH : r.lyW + "-" + r.lyL) + "</span>" +
-          '<span><span class="k">Consensus </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
-          '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span>" +
-          '<span><span class="k">Proj </span>' + projCell(r) + "</span>" +
-          '<span><span class="k">My pick </span>' + myPickCell(r) + "</span>" +
-          (r.an.length ? '<span><span class="k">Analysts </span>' + analystCell(r) + "</span>" : "") + "</div>" +
-          (OPEN[r.abbr] && r.an.length ? analystDetail(r) : "");
-        h += "<table><thead><tr><th>Book</th><th>Tot</th><th>O</th><th>U</th><th>NV O</th></tr></thead><tbody>";
-        BOOKS.forEach(function (b) {
-          var cols = bookCols(b);
-          h += "<tr><td>" + BOOK_SHORT[b] + "</td>";
-          cols.forEach(function (c) {
-            var cls = [c.best ? c.best(r) : "", c.mark ? c.mark(r) : ""].join(" ").trim();
-            if (cls && c.cls && c.cls.indexOf("tot") >= 0) cls += " tot";
-            h += "<td" + (cls ? ' class="' + cls + '"' : "") + (c.attrs ? c.attrs(r) : "") + ">" + c.cell(r) + "</td>";
-          });
-          h += "</tr>";
-        });
-        h += "</tbody></table>";
-        h += '<div class="best-line"><span><span class="k">Best over </span>' + bestCell(r.bestOver, "over") + "</span>" +
-          '<span><span class="k">Best under </span>' + bestCell(r.bestUnder, "under") + "</span></div></div>";
+          '<span><span class="k">Pyth </span>' + (isNum(r.pythW) ? r.pythW : DASH) + "</span>" +
+          '<span><span class="k">Line </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
+          '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span></div>";
+        h += '<div class="bestrow">' + cardBest(r, r.bestOver, "over") + cardBest(r, r.bestUnder, "under") + "</div>";
+        h += '<div class="stats">' +
+          '<span><span class="k">Expert W </span>' + expertCell(r) + "</span>" +
+          '<span><span class="k">Rec </span>' + val(DASH) + "</span>" +
+          '<span><span class="k">Analysts </span>' + (analystCell(r) || DASH) + "</span>" +
+          '<span><span class="k">My pick </span>' + myPickCell(r) + "</span></div></div>";
       });
     });
     if (!n) h = '<div class="empty">No teams match.</div>';
     el("cards").innerHTML = h;
   }
 
+  // -------------------------------------------------------------- drawer
+  function drawerBookTable(r) {
+    var h = "<table><thead><tr><th>Book</th><th>Line</th><th>Over</th><th>Under</th><th>NV O</th><th>Mkt EV O</th><th>Mkt EV U</th></tr></thead><tbody>";
+    BOOKS.forEach(function (b) {
+      var x = r.b[b];
+      var bo = r.bestOver && r.bestOver.books.indexOf(b) >= 0, bu = r.bestUnder && r.bestUnder.books.indexOf(b) >= 0;
+      h += "<tr><td>" + BOOK_NAME[b] + "</td><td>" + val(fmtTotal(x.total)) + ovMark(x.src.total) + altMark(x.suspect) + "</td>";
+      ["over", "under"].forEach(function (side) {
+        var cls = ((side === "over" ? bo : bu) ? (side === "over" ? "best-o " : "best-u ") : "") + (isMine(r.abbr, b, side) ? "mine" : "");
+        h += "<td" + (cls.trim() ? ' class="' + cls.trim() + '"' : "") + pickAttrs(r.abbr, b, side, x.total) + ">" + priceCell(r, b, side) + "</td>";
+      });
+      h += "<td>" + (x.nvOver === null ? val(DASH) : fmtPct(x.nvOver)) + "</td>" +
+        "<td>" + (x.evover === null ? val(DASH) : fmtEV(x.evover)) + "</td>" +
+        "<td>" + (x.evunder === null ? val(DASH) : fmtEV(x.evunder)) + "</td></tr>";
+    });
+    return h + "</tbody></table>";
+  }
+  function drawerAnalysts(r) {
+    if (!r.anAll.length) return '<p class="note">No sourced analyst picks for this team yet.</p>';
+    var h = '<ul class="src-list">';
+    r.anAll.forEach(function (p) {
+      var cur = r.anLatest[p.analyst] === p;
+      h += "<li><b>" + esc(p.analyst) + "</b> " + (p.side === "over" ? "Over" : "Under") +
+        (isNum(p.line) ? " " + fmtTotal(p.line) : "") +
+        (isNum(p.line) && r.cons !== null && p.line !== r.cons ? ' <span class="tag">consensus now ' + fmtTotal(r.cons) + "</span>" : "") +
+        (p.basis === "derived_from_wl_prediction" ? ' <span class="tag">from W-L prediction</span>' : "") +
+        (cur ? "" : ' <span class="tag">superseded</span>') +
+        "<br>" + fmtDate(p.date + "T12:00:00") + ' · <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a>" +
+        (p.timestamp ? " @" + esc(p.timestamp) : "") + '<br><span class="na">' + esc(p.summary) + "</span></li>";
+    });
+    return h + "</ul>";
+  }
+  function drawerExperts(r) {
+    if (!r.experts.length) return '<p class="note">No published win numbers for this team yet.</p>';
+    return "";
+  }
+  function renderDrawer() {
+    var d = el("drawer"), r = state.drawer && ROW_BY[state.drawer];
+    el("scrim").classList.toggle("on", !!r);
+    d.classList.toggle("on", !!r);
+    d.setAttribute("aria-hidden", String(!r));
+    if (!r) return;
+    var p = PICKS[r.abbr];
+    var h = '<div class="dr-h"><h2 id="dr-title">' + r.abbr + " <span>" + esc(r.name) + "</span></h2>" +
+      '<button type="button" class="x" data-close aria-label="Close">&times;</button></div>' +
+      '<div class="meta">' + r.conf + " · " + r.div + "</div>";
+    h += '<div class="stats">' +
+      '<span><span class="k">25-26 </span>' + (r.lyW === null ? DASH : r.lyW + "-" + r.lyL) + "</span>" +
+      '<span><span class="k">Pyth W </span>' + (isNum(r.pythW) ? r.pythW : DASH) + "</span>" +
+      '<span><span class="k">Consensus </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
+      '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span>" +
+      '<span><span class="k">Proj </span>' + projCell(r) + "</span></div>";
+    h += "<h3>Book lines</h3>" + drawerBookTable(r) +
+      '<p class="note">Tap a price to tag it as your pick. ' +
+      (r.mkt ? "Market center " + r.mkt.mu.toFixed(1) + " wins from " + r.mkt.basis + ", SD " + SIGMA + "." : "") + "</p>";
+    h += "<h3>My pick</h3>" + (p
+      ? "<div>" + myPickCell(r) + ' <button type="button" data-unpick="' + r.abbr + '">Remove</button></div>'
+      : '<p class="note">None. Tap any price above.</p>');
+    h += "<h3>Analyst picks (" + r.an.length + ")</h3>" + drawerAnalysts(r);
+    h += "<h3>Expert win estimates</h3>" + drawerExperts(r);
+    d.innerHTML = h;
+  }
+  function openDrawer(abbr) {
+    var was = state.drawer;
+    state.drawer = abbr;
+    render();
+    if (!was) { var x = el("drawer").querySelector("[data-close]"); if (x) x.focus(); }
+  }
+  function closeDrawer() {
+    var abbr = state.drawer;
+    state.drawer = null;
+    render();
+    var row = abbr && document.querySelector('#tbl tr[data-team="' + abbr + '"]');
+    if (row) row.focus && row.focus();
+  }
+
   function render() {
     var g = grouped(filtered());
-    renderTable(g);
+    renderTable(g, visibleCols());
     renderCards(g);
+    renderDrawer();
     el("msort").value = state.sort;
     el("mdir").innerHTML = state.dir > 0 ? "&uarr;" : "&darr;";
     el("mine").setAttribute("aria-pressed", String(state.mine));
     var nP = Object.keys(PICKS).length;
     el("mine").textContent = "My picks only" + (nP ? " (" + nP + ")" : "");
-    Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-group]"), function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-group") === state.group));
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === state.view));
     });
   }
 
@@ -854,72 +947,76 @@ footer a { color: var(--muted); }
     persist();
     render();
   }
-
-  el("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
-  el("conf").addEventListener("change", function (e) { state.conf = e.target.value; fillDivs(); render(); });
-  el("div").addEventListener("change", function (e) { state.div = e.target.value; render(); });
-  Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
-    b.addEventListener("click", function () { state.group = b.getAttribute("data-group"); persist(); render(); });
-  });
   function togglePick(a, b, side) {
-    var r = ROWS.filter(function (x) { return x.abbr === a; })[0];
+    var r = ROW_BY[a];
     if (!r || !isNum(r.b[b].total)) return;
     var cur = PICKS[a];
     if (cur && cur.book === b && cur.side === side) delete PICKS[a];
     else PICKS[a] = { side: side, book: b, total: r.b[b].total, price: isNum(r.b[b][side]) ? r.b[b][side] : null, at: new Date().toISOString() };
-    store("nbawt-picks", JSON.stringify(PICKS));
+    savePicks();
     render();
   }
   function activate(e) {
     var th = e.target.closest("th[data-key]");
     if (th) { setSort(th.getAttribute("data-key")); return true; }
-    if (e.target.closest("a")) return false;
+    if (e.target.closest("a, input, textarea, select")) return false;
     var pk = e.target.closest("[data-pick]");
     if (pk) { var p = pk.getAttribute("data-pick").split("|"); togglePick(p[0], p[1], p[2]); return true; }
-    var an = e.target.closest("[data-an]");
-    if (an) { var k = an.getAttribute("data-an"); OPEN[k] = !OPEN[k]; render(); return true; }
+    if (e.target.closest("[data-close]")) { closeDrawer(); return true; }
+    var un = e.target.closest("[data-unpick]");
+    if (un) { delete PICKS[un.getAttribute("data-unpick")]; savePicks(); render(); return true; }
+    var t = e.target.closest("[data-team]");
+    if (t) { openDrawer(t.getAttribute("data-team")); return true; }
     return false;
   }
-  ["tbl", "cards"].forEach(function (id) {
+  ["tbl", "cards", "drawer"].forEach(function (id) {
     el(id).addEventListener("click", activate);
     el(id).addEventListener("keydown", function (e) {
-      if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-pick], [data-an]") && activate(e)) e.preventDefault();
+      if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-pick], [data-team], button") && activate(e)) e.preventDefault();
+    });
+  });
+  el("scrim").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.drawer) closeDrawer(); });
+
+  el("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+  el("conf").addEventListener("change", function (e) { state.conf = e.target.value; fillDivs(); render(); });
+  el("div").addEventListener("change", function (e) { state.div = e.target.value; render(); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-group]"), function (b) {
+    b.addEventListener("click", function () { state.group = b.getAttribute("data-group"); persist(); render(); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function (b) {
+    b.addEventListener("click", function () {
+      state.view = b.getAttribute("data-view");
+      if (COL_BY_KEY[state.sort].view === "full" && state.view !== "full") state.sort = "cons";
+      persist(); render();
     });
   });
   el("mine").addEventListener("click", function () { state.mine = !state.mine; persist(); render(); });
-  el("msort").innerHTML = COLS.map(function (c) {
-    var lbl = c.grp && BOOK_NAME[c.grp] ? BOOK_NAME[c.grp] + " " + c.label : c.grp === "cons" ? "Consensus " + c.label : c.label;
-    if (c.key === "an") lbl = "Analysts (net lean)";
-    if (c.key === "proj") lbl = "Proj vs line";
-    return '<option value="' + c.key + '">' + lbl + "</option>";
+  // Mobile sort: cards follow the compact view, so offer compact columns
+  el("msort").innerHTML = COLS.filter(function (c) { return c.view === "both"; }).map(function (c) {
+    return '<option value="' + c.key + '">' + esc(sortLabel(c)) + "</option>";
   }).join("");
   el("msort").addEventListener("change", function (e) { state.sort = e.target.value; persist(); render(); });
   el("mdir").addEventListener("click", function () { state.dir = -state.dir; persist(); render(); });
+  window.matchMedia("(max-width: 767px)").addEventListener("change", function () { render(); });
 
   // ----------------------------------------------------------------- load
   function getJSON(path) {
     return fetch(path, { cache: "no-store" }).then(function (r) {
       if (!r.ok) throw new Error(path + ": HTTP " + r.status);
       return r.json();
-    });
+    }).catch(function (e) { return { _err: e }; });
   }
+  function ok(x) { return x && !x._err ? x : null; }
 
   var banners = [];
   function warn(msg) { banners.push(msg); }
 
   Promise.all([
-    getJSON("data/lines.json").catch(function (e) { return { _err: e }; }),
-    getJSON("data/manual_overrides.json").catch(function (e) { return { _err: e }; }),
-    getJSON("data/last_season.json").catch(function (e) { return { _err: e }; }),
-    getJSON("data/analyst_picks.json").catch(function (e) { return { _err: e }; }),
-    getJSON("data/projections.json").catch(function (e) { return { _err: e }; })
+    getJSON("data/lines.json"), getJSON("data/manual_overrides.json"), getJSON("data/last_season.json"),
+    getJSON("data/analyst_picks.json"), getJSON("data/projections.json")
   ]).then(function (res) {
-    var lines = res[0]._err ? null : res[0];
-    var ov = res[1]._err ? null : res[1];
-    var last = res[2]._err ? null : res[2];
-    var anDoc = res[3]._err ? null : res[3];
-    var projDoc = res[4]._err ? null : res[4];
-    LINES = lines;
+    var lines = ok(res[0]), ov = ok(res[1]), last = ok(res[2]), anDoc = ok(res[3]), projDoc = ok(res[4]);
 
     if (location.protocol === "file:") {
       warn("Opened from disk, so the browser blocks loading the data files. Run <code>python -m http.server</code> in this folder and open http://localhost:8000.");
@@ -935,6 +1032,7 @@ footer a { color: var(--muted); }
     }
 
     ROWS = buildRows(lines, ov, last, warn);
+    ROWS.forEach(function (r) { ROW_BY[r.abbr] = r; });
     attachAnalysts(ROWS, anDoc);
     attachProjections(ROWS, projDoc);
     var sus = [];
@@ -943,7 +1041,6 @@ footer a { color: var(--muted); }
       "</b>. VegasInsider doesn't mark main vs alt lines, so these show " + DASH + ". Add the main line in manual_overrides.json.");
     var nOv = ov && Array.isArray(ov.overrides) ? ov.overrides.length : 0;
 
-    // Header meta
     var basis = lines && lines.opening_basis === "open" ? "since open" : "since first tracked";
     var first = lines && lines.first_tracked_at;
     el("updated").innerHTML = lines
@@ -952,12 +1049,10 @@ footer a { color: var(--muted); }
 
     el("legend").innerHTML =
       '<span><span class="swatch" style="background:var(--best-o);box-shadow:inset 2px 0 0 var(--best-o-line)"></span>Best over / ' +
-      '<span class="swatch" style="background:var(--best-u);box-shadow:inset -2px 0 0 var(--best-u-line)"></span>best under: highest model EV across books (hover a price for details)</span>' +
-      '<span><span class="unp" style="margin:0">?</span> better number, but no price published, so not ranked</span>' +
-      '<span><span class="alt" style="margin:0">alt?</span> suspected alternate line, excluded</span>' +
-      '<span><span class="swatch" style="outline:2px solid var(--pick);outline-offset:-2px;background:var(--pick-bg)"></span>My pick (click any O/U price to tag)</span>' +
-      '<span><span class="up">▲</span><span class="down">▼</span> Movement ' + basis + ". On prices, ▲ = that side got more expensive</span>" +
-      "<span>NV O = no-vig over probability</span>" +
+      '<span class="swatch" style="background:var(--best-u);box-shadow:inset -2px 0 0 var(--best-u-line)"></span>best under (Market EV)</span>' +
+      '<span><span class="nop">' + DASH + "</span> faded dash = book has a line but doesn't publish that price (VegasInsider shows overs only), so it can't be ranked</span>" +
+      '<span><span class="swatch" style="outline:2px solid var(--pick);outline-offset:-2px;background:var(--pick-bg)"></span>My pick: tap a best line or any book price</span>' +
+      "<span>Click a team for details</span>" +
       (nOv ? '<span><span class="ov" style="vertical-align:0">&#9679;</span> Manual override (' + nOv + ")</span>" : "");
 
     var srcBits = [];
@@ -968,12 +1063,14 @@ footer a { color: var(--muted); }
       });
     }
     el("footer").innerHTML =
+      "<b>Market EV</b> prices each offer against the market's own center: FanDuel's no-vig line (the only book where we have both sides), " +
+      "with final wins assumed normal around it (SD " + SIGMA + " wins, an assumption). It measures <i>line-shopping value</i> — " +
+      "how much better one book's number/price is than the market — not a forecast of the team. Near-zero or negative is normal; " +
+      "it only goes positive when a book is out of line with FanDuel.<br>" +
       "Preseason lines only. Data: " + (srcBits.join(" · ") || DASH) + ". " +
-      "DraftKings, BetMGM and Caesars under prices aren't published by VegasInsider and show " + DASH + " unless added in manual_overrides.json. " +
       "2025-26 records: " + (last && last.source ? '<a href="' + esc(last.source) + '" rel="noopener">Basketball-Reference</a>' : DASH) + ". " +
-      "Best lines use an assumed normal win distribution (SD " + SIGMA + " wins) centred on FanDuel's no-vig line; it's a comparison tool, not a forecast. " +
-      "Analyst picks: " + (anDoc && anDoc.picks ? anDoc.picks.length + " sourced picks" : DASH) + ". " +
-      "Projections: " + (projDoc && projDoc.projections && projDoc.projections.length ? esc(projDoc.system || "") + " (" + fmtDate(projDoc.fetched_at) + ")" : "not published yet") + ".";
+      "Analyst picks: " + (anDoc && anDoc.picks ? anDoc.picks.length + " sourced" : DASH) + ". " +
+      "Projections: " + (projDoc && projDoc.projections && projDoc.projections.length ? esc(projDoc.system || "") : "not published yet") + ".";
 
     el("banners").innerHTML = banners.map(function (b) { return '<div class="banner">' + b + "</div>"; }).join("");
     fillDivs();

@@ -133,9 +133,9 @@ python -m http.server 8000      # then open http://localhost:8000
     so about -10% EV. o50.5 -105 is about -2%, so the 50.5 wins.
   - Hover any O/U price for its P(cash) and EV.
 - **Missing prices.** DK/MGM/CZR under prices aren't on VegasInsider, so those
-  offers can't be EV-ranked. When an unpriced book has a *better number* than the
-  winner (a lower over or a higher under), its cell gets an amber `?` and the best
-  cell lists it (e.g. `u50.5 -110 FD +MGM?`). It's flagged, not silently ranked.
+  offers can't be EV-ranked and are left out of Best under. In the full view and
+  drawer, a price that's missing while the book has a line shows as a faded `-`
+  (explained once in the legend). There are no per-cell flags.
 - Price movement only shows when the total hasn't moved. Otherwise the prices are
   on different numbers and can't be compared. ▲ on a price = that side got more
   expensive (higher implied probability).
@@ -143,22 +143,29 @@ python -m http.server 8000      # then open http://localhost:8000
 
 ## Page features
 
-- **Sorting:** click any column header; click again to reverse. Missing values
-  always sort last. Works in Flat, Conference and Division views. On mobile
-  (no headers) the Sort dropdown + arrow use the same sort state.
-- **My picks:** click (or tap on mobile, or Enter on keyboard) any book's O or U
-  price to tag it. Click again to untag; tagging another side/book replaces it
-  (one per team). The pick stores side, book, line and price *at tagging time*,
-  and shows `now 49.5` if that book's line later moves. "My picks only" filters
-  to tagged teams. Saved in this browser's localStorage only (`nbawt-picks`);
-  if storage is blocked, picks work until the page reloads.
-- **Analysts:** tally of sides, one per analyst (their latest pick for that
-  team), e.g. `Over 3-1`. Click to expand each pick with date, source link,
-  timestamp, and the line they used when it differs from today's consensus.
-  Sorts by net lean (overs minus unders). Sides are tallied as stated, not
-  re-judged against today's line.
-- **Proj:** projected wins / difference vs consensus (`52.1 / +2.6`); sorts by the
-  difference.
+- **Compact view (default):** Team, Div, 25-26, Pyth W, consensus Line / Move /
+  vs LY, Best over (line, price, book) + Market EV, Best under + Market EV,
+  Expert W, Rec, Analysts, My pick. **Full view** adds every book's Tot / O / U /
+  NV O, plus Proj. The header row and Team column are sticky, so you keep your place
+  when scrolling sideways. Mobile cards always use the compact set.
+- **Team drawer:** click a row (or tap a card) to open a side drawer (a bottom
+  sheet on mobile) with every book's line, no-vig %, Market EV per side, your pick,
+  analyst sources and expert win numbers. Esc, the X, or clicking outside closes it.
+- **Market EV:** the EV of the best over/under, priced against FanDuel's no-vig
+  center (see Calculations). Sortable. It's line-shopping value, not a forecast.
+- **Sorting:** click any header; click again to reverse. Missing values always
+  sort last. Works in Flat, Conference and Division views. On mobile the Sort
+  dropdown + arrow use the same sort state, and list the compact columns.
+- **My picks:** tap a Best over/under cell, or any price in the drawer or full
+  view. Tap again to untag; tagging another side/book replaces it (one per team).
+  The pick stores side, book, line and price *at tagging time*, and shows `now 49.5`
+  if that book's line later moves. "My picks only" filters to tagged teams. Saved
+  in this browser's localStorage (`nbawt-picks`); if storage is blocked, picks work
+  until the page reloads.
+- **Analysts:** tally of stated sides, one per analyst (their latest pick for that
+  team), e.g. `Over 3-1`. Sorts by net lean (overs minus unders). Details and
+  source links are in the drawer.
+- **Proj:** projected wins / difference vs consensus (`52.1 / +2.6`). Full view and drawer.
 
 ## Analyst picks and projections (`scraper/analyst_scraper.py`)
 
