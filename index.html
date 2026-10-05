@@ -178,6 +178,28 @@ td.cons { font-weight: 600; }
 .drawer textarea { width: 100%; min-height: 90px; resize: vertical; font-size: 13px; }
 .saved { color: var(--faint); font-size: 11px; }
 #sanity b { color: var(--text); font-weight: 600; }
+.slipdrawer { width: min(560px, 100vw); }
+.sl-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+.sl-bar input[type="text"] { flex: 1 1 140px; min-width: 0; }
+.sl-bar input[type="number"] { width: 90px; }
+.legs td input { width: 64px; padding: 2px 4px; text-align: right; }
+table.legs { white-space: normal; }
+@media (max-width: 767px) {
+  .legs th, .legs td { padding: 4px 3px; font-size: 11px; }
+  .legs td input { width: 46px; }
+}
+.legs .x { padding: 0 6px; }
+.flag { border-left: 3px solid var(--override); background: var(--surface-2); padding: 5px 8px; margin: 4px 0; font-size: 12px; border-radius: 4px; }
+.flag.light { border-left-color: var(--faint); }
+.flag.bad { border-left-color: var(--down); }
+.summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin: 8px 0; }
+.summary div { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+.summary .k { display: block; color: var(--muted); font-size: 11px; }
+.summary b { font-size: 14px; }
+.addrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.chk { display: flex; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0; }
+.expo { font-size: 12px; }
+.expo td, .expo th { padding: 3px 6px; }
 footer { color: var(--faint); font-size: 11px; margin-top: 14px; line-height: 1.6; }
 footer a { color: var(--muted); }
 </style>
@@ -213,6 +235,7 @@ footer a { color: var(--muted); }
     <button type="button" id="export" title="Download your picks, notes and parlay slips as one JSON file">Export</button>
     <button type="button" id="import" title="Load a file made with Export (replaces this browser's picks, notes and slips)">Import</button>
     <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <button type="button" id="slips-btn" class="tgl" aria-pressed="false">Parlay slips</button>
     <label class="mobile-sort">Sort
       <select id="msort"></select>
       <button type="button" id="mdir" aria-label="Toggle sort direction">&darr;</button>
@@ -229,6 +252,7 @@ footer a { color: var(--muted); }
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" aria-hidden="true"></aside>
+<aside class="drawer slipdrawer" id="slipdrawer" role="dialog" aria-modal="true" aria-labelledby="sl-title" aria-hidden="true"></aside>
 
 <script>
 (function () {
@@ -592,6 +616,82 @@ footer a { color: var(--muted); }
   // Parlay slips live under "nbawt-slips" (see slip builder); export/import carries them as-is.
   function loadSlipsRaw() { var s = loadJSONStore("nbawt-slips"); return Array.isArray(s) ? s : []; }
 
+  // ---------------------------------------------------------- parlay slips
+  // A slip: { id, name, book, stake, legs: [{ team, side, myProb }] }.
+  // Parlays are placed at one book, so a leg stores only team + side; its line
+  // and price always come from the slip's book (current scrape). myProb is your
+  // optional override (0-1) and is saved with the slip.
+  function cleanSlips(arr) {
+    return (Array.isArray(arr) ? arr : []).map(function (sl, i) {
+      var seen = {};
+      return {
+        id: typeof sl.id === "string" ? sl.id : "s" + Date.now().toString(36) + i,
+        name: typeof sl.name === "string" && sl.name.trim() ? sl.name.slice(0, 60) : "Slip " + (i + 1),
+        book: BOOKS.indexOf(sl.book) >= 0 ? sl.book : "fanduel",
+        stake: isNum(sl.stake) && sl.stake > 0 ? sl.stake : null,
+        legs: (Array.isArray(sl.legs) ? sl.legs : []).filter(function (l) {
+          var okLeg = l && TEAM_SET[l.team] && (l.side === "over" || l.side === "under") && !seen[l.team];
+          if (okLeg) seen[l.team] = true;
+          return okLeg;
+        }).map(function (l) {
+          return { team: l.team, side: l.side, myProb: isNum(l.myProb) && l.myProb > 0 && l.myProb < 1 ? l.myProb : null };
+        })
+      };
+    });
+  }
+  var SLIPS = cleanSlips(loadSlipsRaw());
+  var activeSlip = SLIPS.length ? SLIPS[0].id : null;
+  function saveSlips() { store("nbawt-slips", JSON.stringify(SLIPS)); }
+  function onSlipsImported() { SLIPS = cleanSlips(loadSlipsRaw()); activeSlip = SLIPS.length ? SLIPS[0].id : null; }
+  function slipById(id) { return SLIPS.filter(function (x) { return x.id === id; })[0] || null; }
+  function newSlip() {
+    var sl = { id: "s" + Date.now().toString(36), name: "Slip " + (SLIPS.length + 1), book: "fanduel", stake: null, legs: [] };
+    SLIPS.push(sl); activeSlip = sl.id; saveSlips();
+    return sl;
+  }
+  function decimalOdds(a) { return 1 + profit(a); }
+  function toAmerican(dec) { return dec >= 2 ? Math.round((dec - 1) * 100) : Math.round(-100 / (dec - 1)); }
+  // Evaluate a slip at its book. Legs without a line or price at that book are flagged
+  // and make the combined numbers unavailable (never guessed).
+  function evalSlip(sl) {
+    var legs = sl.legs.map(function (l) {
+      var r = ROW_BY[l.team], x = r.b[sl.book], price = x[l.side];
+      var mkt = (r.mkt && isNum(x.total)) ? sideProbs(l.side, x.total, r.mkt.mu) : null;
+      var prob = l.myProb !== null ? l.myProb : mkt ? mkt.win : null;
+      var dec = isNum(price) ? decimalOdds(price) : null;
+      return { leg: l, row: r, total: x.total, price: isNum(price) ? price : null, dec: dec,
+               mktProb: mkt ? mkt.win : null, push: mkt ? mkt.push : 0, prob: prob,
+               ev: (dec !== null && prob !== null) ? prob * dec - 1 : null,
+               missing: !isNum(x.total) ? "no line" : !isNum(price) ? "no " + l.side + " price" : null };
+    });
+    var complete = legs.length > 0 && legs.every(function (g) { return !g.missing && g.prob !== null; });
+    var dec = complete ? legs.reduce(function (a, g) { return a * g.dec; }, 1) : null;
+    var prob = complete ? legs.reduce(function (a, g) { return a * g.prob; }, 1) : null;
+    return { legs: legs, complete: complete, dec: dec, american: dec ? toAmerican(dec) : null,
+             implied: dec ? 1 / dec : null, prob: prob, ev: dec ? prob * dec - 1 : null };
+  }
+  // Pairwise correlation flags between legs
+  function corrFlags(sl) {
+    var out = [];
+    for (var i = 0; i < sl.legs.length; i++) {
+      for (var j = i + 1; j < sl.legs.length; j++) {
+        var a = sl.legs[i], b = sl.legs[j], ra = ROW_BY[a.team], rb = ROW_BY[b.team];
+        var pair = a.team + " " + a.side + " + " + b.team + " " + b.side;
+        if (ra.div === rb.div) {
+          if (a.side === b.side) out.push({ cls: "", txt: pair + ": same division (" + ra.div + "), two " + a.side + "s. Slightly negatively " +
+            "correlated: they play each other 4 times, and each of those games is a win for one and a loss for the other, " +
+            "so the real chance both hit is a bit lower than the independence math shows." });
+          else out.push({ cls: "bad", txt: pair + ": division rivals on opposite sides. This compounds the same thesis (their 4 head-to-head games " +
+            "push both legs the same way). It's positively correlated, so the real chance both hit is higher than the independence " +
+            "math shows. Some books restrict this combination for that reason." });
+        } else if (ra.conf === rb.conf) {
+          out.push({ cls: "light", txt: pair + ": same conference (" + ra.conf + "). Light correlation: they meet 3-4 times and compete for the same seeds." });
+        }
+      }
+    }
+    return out;
+  }
+
   // -------------------------------------------------------------- cells
   function mvSpan(d, isPrice, title) {
     if (d === null || Math.abs(d) < 1e-9) return "";
@@ -795,7 +895,7 @@ footer a { color: var(--muted); }
   }
 
   // ---------------------------------------------------------------- state
-  var state = { q: "", conf: "", div: "", group: "flat", sort: "cons", dir: -1, mine: false, view: "compact", drawer: null };
+  var state = { q: "", conf: "", div: "", group: "flat", sort: "cons", dir: -1, mine: false, view: "compact", drawer: null, slips: false };
   (function () {
     var s = loadJSONStore("nbawt-view");
     if (!s) return;
@@ -983,7 +1083,7 @@ footer a { color: var(--muted); }
   }
   function renderDrawer() {
     var d = el("drawer"), r = state.drawer && ROW_BY[state.drawer];
-    el("scrim").classList.toggle("on", !!r);
+    el("scrim").classList.toggle("on", !!r || state.slips);
     d.classList.toggle("on", !!r);
     d.setAttribute("aria-hidden", String(!r));
     if (!r) return;
@@ -1004,6 +1104,13 @@ footer a { color: var(--muted); }
     h += "<h3>My pick</h3>" + (p
       ? "<div>" + myPickCell(r) + ' <button type="button" data-unpick="' + r.abbr + '">Remove</button></div>'
       : '<p class="note">None. Tap any price above.</p>');
+    var asl = slipById(activeSlip);
+    var inSlip = asl && asl.legs.filter(function (l) { return l.team === r.abbr; })[0];
+    h += "<h3>Parlay slip</h3>" + (inSlip
+      ? '<p class="note">' + r.abbr + " " + inSlip.side + " is in <b>" + esc(asl.name) + "</b>. " +
+        '<button type="button" data-open-slips>Open slips</button></p>'
+      : '<div class="addrow"><button type="button" data-addleg="' + r.abbr + '|over">+ Over to ' + esc(asl ? asl.name : "new slip") + "</button>" +
+        '<button type="button" data-addleg="' + r.abbr + '|under">+ Under to ' + esc(asl ? asl.name : "new slip") + "</button></div>");
     h += "<h3>Analyst picks (" + r.an.length + ")</h3>" + drawerAnalysts(r);
     h += "<h3>Expert win estimates</h3>" + drawerExperts(r);
     h += '<h3>My notes</h3><textarea id="note-text" data-note="' + r.abbr + '" maxlength="' + NOTE_MAX + '" placeholder="Your notes on ' +
@@ -1013,6 +1120,7 @@ footer a { color: var(--muted); }
   function openDrawer(abbr) {
     var was = state.drawer;
     state.drawer = abbr;
+    state.slips = false;
     render();
     if (!was) { var x = el("drawer").querySelector("[data-close]"); if (x) x.focus(); }
   }
@@ -1027,7 +1135,121 @@ footer a { color: var(--muted); }
   function render() {
     renderMain();
     renderDrawer();
+    renderSlips();
   }
+
+  // ---------------------------------------------------------- slip panel
+  function pct(v) { return isNum(v) ? (v * 100).toFixed(1) + "%" : DASH; }
+  function renderSlips() {
+    var d = el("slipdrawer");
+    d.classList.toggle("on", state.slips);
+    d.setAttribute("aria-hidden", String(!state.slips));
+    el("slips-btn").setAttribute("aria-pressed", String(state.slips));
+    el("slips-btn").textContent = "Parlay slips" + (SLIPS.length ? " (" + SLIPS.length + ")" : "");
+    if (!state.slips) return;
+    var sl = slipById(activeSlip);
+    var h = '<div class="dr-h"><h2 id="sl-title">Parlay slips</h2><button type="button" class="x" data-close-slips aria-label="Close">&times;</button></div>';
+    h += '<div class="sl-bar"><select id="sl-pick" aria-label="Slip">' + SLIPS.map(function (x) {
+      return '<option value="' + x.id + '"' + (x.id === activeSlip ? " selected" : "") + ">" + esc(x.name) + " (" + x.legs.length + ")</option>";
+    }).join("") + (SLIPS.length ? "" : "<option>No slips yet</option>") + '</select><button type="button" data-newslip>New slip</button>' +
+      (sl ? '<button type="button" data-delslip>Delete</button>' : "") + "</div>";
+    if (sl) {
+      var e = evalSlip(sl);
+      h += '<div class="sl-bar"><input type="text" id="sl-name" value="' + esc(sl.name) + '" maxlength="60" aria-label="Slip name">' +
+        '<label class="chk">Book <select id="sl-book">' + BOOKS.map(function (b) {
+          return '<option value="' + b + '"' + (b === sl.book ? " selected" : "") + ">" + BOOK_NAME[b] + "</option>";
+        }).join("") + '</select></label><label class="chk">Stake $<input type="number" id="sl-stake" min="0" step="1" value="' +
+        (sl.stake === null ? "" : sl.stake) + '" placeholder="opt."></label></div>';
+      h += '<p class="note">Parlays go on one book, so every leg uses ' + BOOK_NAME[sl.book] + "'s line and price.</p>";
+      if (!sl.legs.length) h += '<p class="note">No legs yet. Add from My Picks below, or open a team and use + Over / + Under.</p>';
+      else {
+        h += '<table class="legs"><thead><tr><th>Leg</th><th>Line</th><th>Price</th><th>Mkt prob</th><th>My prob %</th><th>Leg EV</th><th></th></tr></thead><tbody>';
+        e.legs.forEach(function (g, i) {
+          h += "<tr><td><b>" + g.leg.team + "</b> " + (g.leg.side === "over" ? "Over" : "Under") +
+            (g.missing ? ' <span class="tag" style="color:var(--down)">' + BOOK_SHORT[sl.book] + " " + g.missing + "</span>" : "") + "</td>" +
+            "<td>" + (isNum(g.total) ? sideLetter(g.leg.side) + fmtTotal(g.total) : val(DASH)) + "</td>" +
+            "<td>" + val(fmtOdds(g.price)) + "</td>" +
+            '<td title="Market model at this book\'s line (center from FanDuel no-vig, SD ' + SIGMA + ')">' + pct(g.mktProb) + "</td>" +
+            '<td><input type="number" min="1" max="99" step="0.5" data-myprob="' + i + '" value="' +
+            (g.leg.myProb === null ? "" : +(g.leg.myProb * 100).toFixed(1)) + '" placeholder="' + (g.mktProb === null ? "" : (g.mktProb * 100).toFixed(1)) + '" aria-label="My probability for ' + g.leg.team + '"></td>' +
+            "<td>" + (g.ev === null ? val(DASH) : '<span class="' + (g.ev < 0 ? "down" : "up") + '">' + fmtEV(g.ev) + "</span>") + "</td>" +
+            '<td><button type="button" class="x" data-rmleg="' + i + '" aria-label="Remove leg">&times;</button></td></tr>';
+        });
+        h += "</tbody></table>";
+        var miss = e.legs.filter(function (g) { return g.missing; });
+        if (miss.length) h += '<div class="flag bad">' + BOOK_NAME[sl.book] + " has no usable price for " +
+          miss.map(function (g) { return g.leg.team + " " + g.leg.side + " (" + g.missing + ")"; }).join(", ") +
+          ". Combined odds can't be computed until you switch book or remove those legs.</div>";
+        var neg = e.legs.filter(function (g) { return g.ev !== null && g.ev < 0; });
+        if (neg.length) h += '<div class="flag">Negative-EV leg' + (neg.length > 1 ? "s" : "") + ": " +
+          neg.map(function (g) { return g.leg.team + " " + g.leg.side + " (" + fmtEV(g.ev) + ")"; }).join(", ") +
+          ". Each one drags the parlay's EV down.</div>";
+        var stake = sl.stake || 100;
+        h += '<div class="summary">' +
+          '<div><span class="k">Combined odds</span><b>' + (e.american === null ? DASH : fmtOdds(e.american)) + "</b></div>" +
+          '<div><span class="k">Decimal</span><b>' + (e.dec === null ? DASH : e.dec.toFixed(2)) + "</b></div>" +
+          '<div><span class="k">Payout per $100</span><b>' + (e.dec === null ? DASH : "$" + (100 * e.dec).toFixed(0)) + "</b>" +
+            (e.dec === null ? "" : ' <span class="bk">profit $' + (100 * (e.dec - 1)).toFixed(0) + "</span>") + "</div>" +
+          (sl.stake ? '<div><span class="k">Payout on $' + sl.stake + "</span><b>" + (e.dec === null ? DASH : "$" + (stake * e.dec).toFixed(2)) + "</b></div>" : "") +
+          '<div><span class="k">Implied prob</span><b>' + pct(e.implied) + "</b></div>" +
+          '<div><span class="k">Model prob</span><b>' + pct(e.prob) + "</b></div>" +
+          '<div><span class="k">EV</span><b class="' + (e.ev === null ? "" : e.ev < 0 ? "down" : "up") + '">' + fmtEV(e.ev) + "</b></div></div>";
+        h += '<p class="note">Model prob multiplies the legs (your % where entered, otherwise the market model), so it <b>assumes the legs are independent</b>. ' +
+          "Win totals aren't fully independent; see flags below. Pushes on whole-number lines are treated as losses here.</p>";
+        corrFlags(sl).forEach(function (f) { h += '<div class="flag ' + f.cls + '">' + esc(f.txt) + "</div>"; });
+      }
+      // add from my picks
+      var avail = Object.keys(PICKS).filter(function (a) { return !sl.legs.some(function (l) { return l.team === a; }); });
+      h += "<h3>Add from My Picks</h3>" + (avail.length
+        ? avail.map(function (a) {
+            var pk = PICKS[a];
+            return '<label class="chk"><input type="checkbox" data-pickleg="' + a + '"> ' + a + " " + (pk.side === "over" ? "Over" : "Under") +
+              ' <span class="bk">(your pick: ' + sideLetter(pk.side) + fmtTotal(pk.total) + " " + BOOK_SHORT[pk.book] + ")</span></label>";
+          }).join("") + '<button type="button" data-addpicks>Add checked</button>'
+        : '<p class="note">' + (Object.keys(PICKS).length ? "All your picks are already in this slip." : "No picks tagged yet.") + "</p>");
+    }
+    h += "<h3>Exposure (straight picks + all slips)</h3>" + exposureHtml();
+    d.innerHTML = h;
+  }
+  function exposureHtml() {
+    var items = Object.keys(PICKS).map(function (a) { return { team: a, side: PICKS[a].side, src: "pick" }; });
+    SLIPS.forEach(function (sl) { sl.legs.forEach(function (l) { items.push({ team: l.team, side: l.side, src: sl.name }); }); });
+    if (!items.length) return '<p class="note">Nothing yet.</p>';
+    var over = items.filter(function (x) { return x.side === "over"; }).length;
+    var byDiv = {}, byConf = {};
+    items.forEach(function (x) {
+      var r = ROW_BY[x.team];
+      byDiv[r.div] = byDiv[r.div] || { o: 0, u: 0 }; byConf[r.conf] = byConf[r.conf] || { o: 0, u: 0 };
+      byDiv[r.div][x.side === "over" ? "o" : "u"]++; byConf[r.conf][x.side === "over" ? "o" : "u"]++;
+    });
+    var multi = {};
+    SLIPS.forEach(function (sl) { sl.legs.forEach(function (l) { (multi[l.team] = multi[l.team] || []).push(sl.name); }); });
+    var multiTeams = Object.keys(multi).filter(function (t) { return multi[t].length > 1; });
+    var stake = SLIPS.reduce(function (a, sl) { return a + (sl.stake || 0); }, 0);
+    var h = '<div class="stats expo"><span><span class="k">Positions </span>' + items.length + " (" + Object.keys(PICKS).length + " straight, " +
+      (items.length - Object.keys(PICKS).length) + " slip legs)</span>" +
+      '<span><span class="k">Overs / Unders </span>' + over + " / " + (items.length - over) + "</span>" +
+      '<span><span class="k">Total slip stake </span>' + (stake ? "$" + stake : DASH) + "</span></div>";
+    h += '<table class="expo"><thead><tr><th>Group</th><th>Overs</th><th>Unders</th></tr></thead><tbody>';
+    ["East", "West"].forEach(function (c) { if (byConf[c]) h += "<tr><td><b>" + c + "</b></td><td>" + byConf[c].o + "</td><td>" + byConf[c].u + "</td></tr>"; });
+    DIV_ORDER.forEach(function (dv) { if (byDiv[dv]) h += "<tr><td>" + dv + "</td><td>" + byDiv[dv].o + "</td><td>" + byDiv[dv].u + "</td></tr>"; });
+    h += "</tbody></table>";
+    h += '<p class="note">' + (multiTeams.length ? "In more than one slip: " + multiTeams.map(function (t) {
+      return "<b>" + t + "</b> (" + multi[t].map(esc).join(", ") + ")"; }).join("; ") : "No team appears in more than one slip.") + "</p>";
+    return h;
+  }
+  function addLeg(team, side) {
+    var sl = slipById(activeSlip) || newSlip();
+    if (sl.legs.some(function (l) { return l.team === team; })) {
+      alert(team + " is already in " + sl.name + ". One leg per team per slip.");
+      return false;
+    }
+    sl.legs.push({ team: team, side: side, myProb: null });
+    saveSlips();
+    return true;
+  }
+  function openSlips() { state.drawer = null; state.slips = true; render(); var x = el("slipdrawer").querySelector("[data-close-slips]"); if (x) x.focus(); }
+  function closeSlips() { state.slips = false; render(); }
   function renderMain() {
     var g = grouped(filtered());
     renderTable(g, visibleCols());
@@ -1075,6 +1297,9 @@ footer a { color: var(--muted); }
     var pk = e.target.closest("[data-pick]");
     if (pk) { var p = pk.getAttribute("data-pick").split("|"); togglePick(p[0], p[1], p[2]); return true; }
     if (e.target.closest("[data-close]")) { closeDrawer(); return true; }
+    var al = e.target.closest("[data-addleg]");
+    if (al) { var q = al.getAttribute("data-addleg").split("|"); if (addLeg(q[0], q[1])) render(); return true; }
+    if (e.target.closest("[data-open-slips]")) { openSlips(); return true; }
     var un = e.target.closest("[data-unpick]");
     if (un) { delete PICKS[un.getAttribute("data-unpick")]; savePicks(); render(); return true; }
     var t = e.target.closest("[data-team]");
@@ -1087,7 +1312,43 @@ footer a { color: var(--muted); }
       if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-pick], [data-team], button") && activate(e)) e.preventDefault();
     });
   });
-  el("scrim").addEventListener("click", closeDrawer);
+  el("scrim").addEventListener("click", function () { if (state.slips) closeSlips(); else closeDrawer(); });
+  el("slips-btn").addEventListener("click", function () { if (state.slips) closeSlips(); else openSlips(); });
+  var sd = el("slipdrawer");
+  sd.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.closest("[data-close-slips]")) { closeSlips(); return; }
+    if (t.closest("[data-newslip]")) { newSlip(); render(); return; }
+    if (t.closest("[data-delslip]")) {
+      var sl = slipById(activeSlip);
+      if (sl && confirm("Delete " + sl.name + "?")) {
+        SLIPS = SLIPS.filter(function (x) { return x !== sl; }); activeSlip = SLIPS.length ? SLIPS[0].id : null; saveSlips(); render();
+      }
+      return;
+    }
+    var rm = t.closest("[data-rmleg]");
+    if (rm) { slipById(activeSlip).legs.splice(+rm.getAttribute("data-rmleg"), 1); saveSlips(); render(); return; }
+    if (t.closest("[data-addpicks]")) {
+      Array.prototype.forEach.call(sd.querySelectorAll("[data-pickleg]:checked"), function (c) {
+        var a = c.getAttribute("data-pickleg"); addLeg(a, PICKS[a].side);
+      });
+      render();
+    }
+  });
+  sd.addEventListener("change", function (e) {
+    var t = e.target, sl = slipById(activeSlip);
+    if (t.id === "sl-pick") { activeSlip = t.value; render(); return; }
+    if (!sl) return;
+    if (t.id === "sl-name") { sl.name = t.value.trim().slice(0, 60) || sl.name; }
+    else if (t.id === "sl-book") { sl.book = t.value; }
+    else if (t.id === "sl-stake") { var v = parseFloat(t.value); sl.stake = isNum(v) && v > 0 ? v : null; }
+    else if (t.hasAttribute("data-myprob")) {
+      var leg = sl.legs[+t.getAttribute("data-myprob")], v2 = parseFloat(t.value);
+      leg.myProb = isNum(v2) && v2 > 0 && v2 < 100 ? v2 / 100 : null;
+    } else return;
+    saveSlips();
+    render();
+  });
   var noteTimer = null;
   el("drawer").addEventListener("input", function (e) {
     var a = e.target.getAttribute && e.target.getAttribute("data-note");
@@ -1139,7 +1400,10 @@ footer a { color: var(--muted); }
     };
     rd.readAsText(f);
   });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.drawer) closeDrawer(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (state.slips) closeSlips(); else if (state.drawer) closeDrawer();
+  });
 
   el("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
   el("conf").addEventListener("change", function (e) { state.conf = e.target.value; fillDivs(); render(); });

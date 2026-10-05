@@ -193,6 +193,35 @@ python -m http.server 8000      # then open http://localhost:8000
   parlay slips. Import on another device replaces that browser's picks, notes and
   slips after a confirmation that shows the counts. No backend.
 
+## Parlay builder
+
+Open **Parlay slips** (a drawer on desktop, a bottom sheet on mobile).
+
+- **Slips:** multiple named slips, each with a **book selector** and an optional
+  stake. Parlays are placed at one book, so every leg uses that book's current line
+  and price. A leg the book has no line or price for is flagged, and the combined
+  numbers show `-` until you switch book or remove it.
+- **Adding legs:** from My Picks (checkboxes in the panel), or from any team's drawer
+  (`+ Over` / `+ Under`, added to the selected slip; a slip is created if none
+  exists). The same team can't be in one slip twice.
+- **Per leg:** team, side, line, price, market probability (the existing model at
+  that book's line), an optional **my probability %** override (saved with the
+  slip), and leg EV.
+- **Summary:** combined American and decimal odds, payout per $100 (and on your
+  stake), implied probability (1 / decimal), model probability (product of legs,
+  using your % where entered), and EV %. Negative-EV legs get a warning. The UI
+  notes that the product **assumes independence**. Pushes on whole-number lines
+  count as losses.
+- **Correlation flags (per pair of legs):**
+  - same division, both overs or both unders: slightly *negatively* correlated
+    (4 head-to-head games, each a win for one and a loss for the other);
+  - same division, over one and under the rival: *positively* correlated, the same
+    thesis twice; some books restrict it;
+  - same conference (different division): a lighter flag.
+- **Exposure** (straight picks + all slips): overs vs unders, counts by conference
+  and division, total stake, and teams that appear in more than one slip.
+- Slips are stored in this browser (`nbawt-slips`) and travel with Export / Import.
+
 ## Analyst picks and projections (`scraper/analyst_scraper.py`)
 
 Separate from the lines scraper; re-run as new episodes come out (most annual
