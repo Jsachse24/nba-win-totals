@@ -1,0 +1,4 @@
+{
+  "_help": "Each entry overrides scraped data for one team/book. Only the keys you include are applied; null clears a value (shows '-'). If you change 'total' without giving a price for a side, the scraped price for that side is dropped. Teams: canonical abbreviations (BOS, BKN, NYK, ...). Books: draftkings, fanduel, betmgm, caesars. Example: {\"team\": \"BOS\", \"book\": \"caesars\", \"total\": 50.5, \"over\": -115, \"under\": -105, \"note\": \"from Caesars app 10/5\"}",
+  "overrides": []
+}

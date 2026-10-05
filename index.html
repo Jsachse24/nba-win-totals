@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Win Totals 2026-27</title>
+<meta name="description" content="Preseason NBA 2026-27 regular season win totals across DraftKings, FanDuel, BetMGM and Caesars.">
+<style>
+:root {
+  --bg: #0f1216; --surface: #161b21; --surface-2: #1d232b; --border: #2a323c;
+  --text: #e6e9ee; --muted: #8b95a3; --faint: #5d6774;
+  --accent: #6aa9ff;
+  --up: #3fbf7f; --down: #f0616d;
+  --best-o: rgba(63, 191, 127, .18); --best-o-line: #3fbf7f;
+  --best-u: rgba(106, 169, 255, .20); --best-u-line: #6aa9ff;
+  --override: #e3b341;
+  --row-hover: #1a2027;
+}
+:root[data-theme="light"] {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --border: #d9dee5;
+  --text: #161a20; --muted: #5b6573; --faint: #8a94a2;
+  --accent: #1f6fe0;
+  --up: #16884f; --down: #c9303d;
+  --best-o: rgba(22, 136, 79, .13); --best-o-line: #16884f;
+  --best-u: rgba(31, 111, 224, .13); --best-u-line: #1f6fe0;
+  --override: #a8730a;
+  --row-hover: #f3f6fa;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.wrap { max-width: 1680px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+.meta { color: var(--muted); font-size: 12px; }
+.spacer { flex: 1; }
+button, select, input {
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+}
+button { cursor: pointer; }
+button:hover, select:hover { border-color: var(--faint); }
+input[type="search"] { min-width: 200px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.controls label { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: var(--surface); color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.banner {
+  border: 1px solid var(--border); border-left: 3px solid var(--override);
+  background: var(--surface); padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 12px;
+}
+.legend { color: var(--muted); font-size: 12px; margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--faint); }
+.na { color: var(--faint); }
+.ov { color: var(--override); font-size: 9px; vertical-align: super; margin-left: 1px; }
+
+/* ---------- desktop table ---------- */
+.table-wrap {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  overflow: auto; max-height: calc(100vh - 190px);
+}
+table { border-collapse: separate; border-spacing: 0; width: 100%; white-space: nowrap; }
+th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+thead th {
+  position: sticky; z-index: 2; background: var(--surface-2); color: var(--muted);
+  font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em;
+}
+thead tr:first-child th { top: 0; height: 28px; }
+thead tr:nth-child(2) th { top: 28px; cursor: pointer; user-select: none; }
+thead tr:nth-child(2) th:hover { color: var(--text); }
+th.sorted { color: var(--text); }
+th .arrow { font-size: 9px; margin-left: 3px; }
+.grp { text-align: center; border-left: 1px solid var(--border); color: var(--text); }
+.bl { border-left: 1px solid var(--border); }
+td.team, th.team { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+thead th.team { z-index: 3; background: var(--surface-2); }
+td.team b { display: inline-block; min-width: 36px; }
+td.team span { color: var(--muted); }
+td.left, th.left { text-align: left; }
+tbody tr:hover td { background: var(--row-hover); }
+tr.group td {
+  background: var(--surface-2); color: var(--text); font-weight: 600; text-align: left;
+  position: sticky; left: 0; font-size: 12px;
+}
+td.best-o { background: var(--best-o); }
+td.best-u { background: var(--best-u); }
+td.best-o.best-u { background: linear-gradient(90deg, var(--best-o) 50%, var(--best-u) 50%); }
+td.tot.best-o { box-shadow: inset 2px 0 0 var(--best-o-line); }
+td.tot.best-u { box-shadow: inset -2px 0 0 var(--best-u-line); }
+td.tot.best-o.best-u { box-shadow: inset 2px 0 0 var(--best-o-line), inset -2px 0 0 var(--best-u-line); }
+.mv { font-size: 10px; margin-left: 3px; }
+td.cons { font-weight: 600; }
+.bk { color: var(--muted); font-size: 11px; margin-left: 4px; }
+
+/* ---------- mobile cards ---------- */
+#cards { display: none; }
+.mobile-sort { display: none; }
+@media (max-width: 767px) {
+  .wrap { padding: 12px 16px; }
+  .table-wrap { display: none; }
+  #cards { display: block; }
+  .mobile-sort { display: flex; }
+  input[type="search"] { min-width: 0; flex: 1 1 100%; }
+  .controls > * { flex: 1 1 auto; }
+}
+.group-h { font-weight: 700; font-size: 13px; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 10px;
+}
+.card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card-h .nm { font-weight: 700; font-size: 14px; }
+.card-h .nm span { color: var(--muted); font-weight: 400; }
+.card-h .cd { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 8px; font-size: 12px; }
+.stats .k { color: var(--muted); }
+.card table { font-size: 12px; }
+.card th, .card td { padding: 4px 6px; }
+.card thead th { position: static; }
+.card td:first-child, .card th:first-child { text-align: left; }
+.best-line { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 12px; }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
+footer { color: var(--faint); font-size: 11px; margin-top: 14px; }
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NBA Win Totals 2026-27</h1>
+    <span class="meta" id="updated">Loading...</span>
+    <span class="spacer"></span>
+    <button id="theme" type="button" aria-label="Toggle light/dark mode">Light mode</button>
+  </header>
+
+  <div id="banners"></div>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search team" aria-label="Search team">
+    <label>Conf
+      <select id="conf"><option value="">All</option><option>East</option><option>West</option></select>
+    </label>
+    <label>Div <select id="div"></select></label>
+    <div class="seg" role="group" aria-label="Group by">
+      <button type="button" data-group="flat" aria-pressed="true">Flat</button>
+      <button type="button" data-group="conf" aria-pressed="false">Conference</button>
+      <button type="button" data-group="div" aria-pressed="false">Division</button>
+    </div>
+    <label class="mobile-sort">Sort
+      <select id="msort"></select>
+      <button type="button" id="mdir" aria-label="Toggle sort direction">&darr;</button>
+    </label>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="table-wrap"><table id="tbl"></table></div>
+  <div id="cards"></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Canonical teams -- keep in sync with scraper/teams.py
+  var TEAMS = [
+    ["BOS","Boston","Celtics","East","Atlantic"],["BKN","Brooklyn","Nets","East","Atlantic"],
+    ["NYK","New York","Knicks","East","Atlantic"],["PHI","Philadelphia","76ers","East","Atlantic"],
+    ["TOR","Toronto","Raptors","East","Atlantic"],["CHI","Chicago","Bulls","East","Central"],
+    ["CLE","Cleveland","Cavaliers","East","Central"],["DET","Detroit","Pistons","East","Central"],
+    ["IND","Indiana","Pacers","East","Central"],["MIL","Milwaukee","Bucks","East","Central"],
+    ["ATL","Atlanta","Hawks","East","Southeast"],["CHA","Charlotte","Hornets","East","Southeast"],
+    ["MIA","Miami","Heat","East","Southeast"],["ORL","Orlando","Magic","East","Southeast"],
+    ["WAS","Washington","Wizards","East","Southeast"],["DEN","Denver","Nuggets","West","Northwest"],
+    ["MIN","Minnesota","Timberwolves","West","Northwest"],["OKC","Oklahoma City","Thunder","West","Northwest"],
+    ["POR","Portland","Trail Blazers","West","Northwest"],["UTA","Utah","Jazz","West","Northwest"],
+    ["GSW","Golden State","Warriors","West","Pacific"],["LAC","Los Angeles","Clippers","West","Pacific"],
+    ["LAL","Los Angeles","Lakers","West","Pacific"],["PHX","Phoenix","Suns","West","Pacific"],
+    ["SAC","Sacramento","Kings","West","Pacific"],["DAL","Dallas","Mavericks","West","Southwest"],
+    ["HOU","Houston","Rockets","West","Southwest"],["MEM","Memphis","Grizzlies","West","Southwest"],
+    ["NOP","New Orleans","Pelicans","West","Southwest"],["SAS","San Antonio","Spurs","West","Southwest"]
+  ];
+  var DIVS = { East: ["Atlantic", "Central", "Southeast"], West: ["Northwest", "Pacific", "Southwest"] };
+  var DIV_ORDER = DIVS.East.concat(DIVS.West);
+  var BOOKS = ["draftkings", "fanduel", "betmgm", "caesars"];
+  var BOOK_NAME = { draftkings: "DraftKings", fanduel: "FanDuel", betmgm: "BetMGM", caesars: "Caesars" };
+  var BOOK_SHORT = { draftkings: "DK", fanduel: "FD", betmgm: "MGM", caesars: "CZR" };
+  var FIELDS = ["total", "over", "under"];
+  var DASH = "-";
+
+  // ---------------------------------------------------------------- utils
+  function el(id) { return document.getElementById(id); }
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function fmtTotal(v) { return isNum(v) ? v.toFixed(1) : DASH; }
+  function fmtOdds(v) { return isNum(v) ? (v > 0 ? "+" + v : String(v)) : DASH; }
+  function fmtPct(v) { return isNum(v) ? (v * 100).toFixed(1) + "%" : DASH; }
+  function fmtSigned(v) {
+    if (!isNum(v)) return DASH;
+    if (v === 0) return "0.0";
+    return (v > 0 ? "+" : "−") + Math.abs(v).toFixed(1);
+  }
+  function median(xs) {
+    if (!xs.length) return null;
+    var s = xs.slice().sort(function (a, b) { return a - b; });
+    var m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  // American odds -> implied probability (includes vig)
+  function implied(a) {
+    if (!isNum(a)) return null;
+    return a < 0 ? -a / (-a + 100) : 100 / (a + 100);
+  }
+  // Higher American number = better payout for the bettor
+  function cmpPrice(a, b) {
+    if (isNum(a) && isNum(b)) return b - a;
+    if (isNum(a)) return -1;
+    if (isNum(b)) return 1;
+    return 0;
+  }
+  function fmtTime(iso) {
+    if (!iso) return DASH;
+    var d = new Date(iso);
+    if (isNaN(d)) return esc(iso);
+    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? esc(iso) : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  // ------------------------------------------------------------- storage
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* unavailable */ } }
+  function recall(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  // --------------------------------------------------------------- theme
+  function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    el("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
+  }
+  setTheme(recall("nbawt-theme") === "light" ? "light" : "dark");
+  el("theme").addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    setTheme(next);
+    store("nbawt-theme", next);
+  });
+
+  // ---------------------------------------------------------- overrides
+  // Mirrors scraper/core.py apply_overrides():
+  //  - only keys present are applied; null clears a value
+  //  - changing the total without a price for a side drops that side's scraped price
+  function applyOverrides(books, ov, warn) {
+    var merged = JSON.parse(JSON.stringify(books));
+    var src = {};
+    TEAMS.forEach(function (t) {
+      src[t[0]] = {};
+      BOOKS.forEach(function (b) {
+        src[t[0]][b] = {};
+        FIELDS.forEach(function (f) { src[t[0]][b][f] = isNum(merged[t[0]][b][f]) ? "scraped" : null; });
+      });
+    });
+    var entries = (ov && Array.isArray(ov.overrides)) ? ov.overrides : [];
+    entries.forEach(function (e, i) {
+      if (!merged[e.team] || BOOKS.indexOf(e.book) < 0) {
+        warn("Override #" + i + " skipped: unknown team/book (" + e.team + " / " + e.book + ")");
+        return;
+      }
+      var bad = FIELDS.filter(function (f) {
+        if (!(f in e) || e[f] === null) return false;
+        return f === "total" ? !isNum(e[f]) : !(isNum(e[f]) && Math.round(e[f]) === e[f]);
+      });
+      if (bad.length) { warn("Override #" + i + " skipped: bad value for " + bad.join(", ")); return; }
+      var rec = merged[e.team][e.book], s = src[e.team][e.book];
+      if ("total" in e && e.total !== rec.total) {
+        ["over", "under"].forEach(function (side) {
+          if (!(side in e)) { rec[side] = null; s[side] = null; }
+        });
+      }
+      FIELDS.forEach(function (f) {
+        if (f in e) { rec[f] = e[f]; s[f] = e[f] === null ? null : "override"; }
+      });
+    });
+    return { merged: merged, src: src };
+  }
+
+  // ---------------------------------------------------------------- model
+  function emptyBooks() {
+    var o = {};
+    TEAMS.forEach(function (t) {
+      o[t[0]] = {};
+      BOOKS.forEach(function (b) { o[t[0]][b] = { total: null, over: null, under: null }; });
+    });
+    return o;
+  }
+
+  function moveDir(cur, open) {
+    if (!isNum(cur) || !isNum(open)) return null;
+    return cur - open;
+  }
+
+  function buildRows(lines, ov, last, warn) {
+    var scraped = emptyBooks();
+    if (lines && lines.teams) {
+      TEAMS.forEach(function (t) {
+        BOOKS.forEach(function (b) {
+          var r = lines.teams[t[0]] && lines.teams[t[0]][b];
+          if (r) FIELDS.forEach(function (f) { scraped[t[0]][b][f] = isNum(r[f]) ? r[f] : null; });
+        });
+      });
+    }
+    var m = applyOverrides(scraped, ov, warn);
+    var opening = (lines && lines.opening) || {};
+    var lastTeams = (last && last.teams) || {};
+
+    return TEAMS.map(function (t) {
+      var a = t[0];
+      var row = {
+        abbr: a, city: t[1], nickname: t[2], name: t[1] + " " + t[2], conf: t[3], div: t[4],
+        lyW: lastTeams[a] && isNum(lastTeams[a].w) ? lastTeams[a].w : null,
+        lyL: lastTeams[a] && isNum(lastTeams[a].l) ? lastTeams[a].l : null,
+        b: {}
+      };
+      var totals = [], openTotals = [];
+      BOOKS.forEach(function (b) {
+        var cur = m.merged[a][b], op = (opening[a] && opening[a][b]) || null;
+        var io = implied(cur.over), iu = implied(cur.under);
+        var x = {
+          total: cur.total, over: cur.over, under: cur.under, src: m.src[a][b], open: op,
+          // No-vig: normalize the two implied probabilities to sum to 100%
+          nvOver: (io !== null && iu !== null) ? io / (io + iu) : null,
+          nvUnder: (io !== null && iu !== null) ? iu / (io + iu) : null,
+          mvTotal: op ? moveDir(cur.total, op.total) : null,
+          // Price movement measured in implied probability (only if the total hasn't moved,
+          // otherwise the prices are on different numbers and aren't comparable)
+          mvOver: (op && cur.total === op.total && implied(op.over) !== null && io !== null) ? io - implied(op.over) : null,
+          mvUnder: (op && cur.total === op.total && implied(op.under) !== null && iu !== null) ? iu - implied(op.under) : null
+        };
+        row.b[b] = x;
+        if (isNum(cur.total)) totals.push(cur.total);
+        if (op && isNum(op.total)) openTotals.push(op.total);
+      });
+      row.nBooks = totals.length;
+      row.cons = median(totals);
+      row.consOpen = median(openTotals);
+      row.consMove = (row.cons !== null && row.consOpen !== null) ? row.cons - row.consOpen : null;
+      row.delta = (row.cons !== null && row.lyW !== null) ? row.cons - row.lyW : null;
+
+      // Best over: lowest total, tiebreak best over price. Best under: highest total, tiebreak best under price.
+      // A book with a total but no price for that side still qualifies; at equal totals, a known price ranks first.
+      row.bestOver = best(row, "over", function (x, y) { return x - y; });
+      row.bestUnder = best(row, "under", function (x, y) { return y - x; });
+      return row;
+    });
+  }
+
+  function best(row, side, cmpTotal) {
+    var cands = BOOKS.filter(function (b) { return isNum(row.b[b].total); });
+    if (!cands.length) return null;
+    cands.sort(function (p, q) {
+      return cmpTotal(row.b[p].total, row.b[q].total) || cmpPrice(row.b[p][side], row.b[q][side]);
+    });
+    var top = row.b[cands[0]];
+    var books = cands.filter(function (b) {
+      return row.b[b].total === top.total && row.b[b][side] === top[side];
+    });
+    return { total: top.total, price: top[side], books: books };
+  }
+
+  // -------------------------------------------------------------- columns
+  // Each column: key, label, sort value getter, desktop cell renderer.
+  function mvSpan(d, isPrice, title) {
+    if (d === null) return "";
+    if (Math.abs(d) < 1e-9) return "";
+    var up = d > 0;
+    var txt = isPrice ? (up ? "▲" : "▼") : (up ? "▲" : "▼") + Math.abs(d).toFixed(1).replace(/\.0$/, "");
+    return '<span class="mv ' + (up ? "up" : "down") + '" title="' + esc(title) + '">' + txt + "</span>";
+  }
+  function ovMark(s) { return s === "override" ? '<span class="ov" title="Manual override">&#9679;</span>' : ""; }
+  function val(txt) { return txt === DASH ? '<span class="na">' + DASH + "</span>" : txt; }
+
+  function bookCols(b) {
+    var sh = BOOK_SHORT[b];
+    return [
+      { key: b + ".total", label: "Tot", grp: b, cls: "bl tot",
+        get: function (r) { return r.b[b].total; },
+        cell: function (r) {
+          var x = r.b[b];
+          var t = x.open ? "First tracked: " + fmtTotal(x.open.total) : "";
+          return val(fmtTotal(x.total)) + ovMark(x.src.total) + mvSpan(x.mvTotal, false, t);
+        },
+        best: function (r) {
+          var c = [];
+          if (r.bestOver && r.bestOver.books.indexOf(b) >= 0) c.push("best-o");
+          if (r.bestUnder && r.bestUnder.books.indexOf(b) >= 0) c.push("best-u");
+          return c.join(" ");
+        } },
+      { key: b + ".over", label: "O", grp: b,
+        get: function (r) { return r.b[b].over; },
+        cell: function (r) {
+          var x = r.b[b];
+          var t = x.open ? "First tracked: o" + fmtTotal(x.open.total) + " " + fmtOdds(x.open.over) : "";
+          return val(fmtOdds(x.over)) + ovMark(x.src.over) + mvSpan(x.mvOver, true, t);
+        },
+        best: function (r) { return r.bestOver && r.bestOver.books.indexOf(b) >= 0 && isNum(r.b[b].over) ? "best-o" : ""; } },
+      { key: b + ".under", label: "U", grp: b,
+        get: function (r) { return r.b[b].under; },
+        cell: function (r) {
+          var x = r.b[b];
+          var t = x.open ? "First tracked: u" + fmtTotal(x.open.total) + " " + fmtOdds(x.open.under) : "";
+          return val(fmtOdds(x.under)) + ovMark(x.src.under) + mvSpan(x.mvUnder, true, t);
+        },
+        best: function (r) { return r.bestUnder && r.bestUnder.books.indexOf(b) >= 0 && isNum(r.b[b].under) ? "best-u" : ""; } },
+      { key: b + ".nv", label: "NV O", grp: b, title: sh + " no-vig over probability",
+        get: function (r) { return r.b[b].nvOver; },
+        cell: function (r) {
+          var x = r.b[b];
+          if (x.nvOver === null) return val(DASH);
+          return '<span title="No-vig: over ' + fmtPct(x.nvOver) + " / under " + fmtPct(x.nvUnder) + '">' + fmtPct(x.nvOver) + "</span>";
+        } }
+    ];
+  }
+
+  function bestCell(bst, side) {
+    if (!bst) return val(DASH);
+    return (side === "over" ? "o" : "u") + fmtTotal(bst.total) + " " + fmtOdds(bst.price) +
+      '<span class="bk">' + bst.books.map(function (b) { return BOOK_SHORT[b]; }).join("/") + "</span>";
+  }
+  function signedCell(v) {
+    if (!isNum(v)) return val(DASH);
+    var c = v > 0 ? "up" : v < 0 ? "down" : "flat";
+    return '<span class="' + c + '">' + fmtSigned(v) + "</span>";
+  }
+  function consMoveCell(v) {
+    if (!isNum(v)) return val(DASH);
+    if (v === 0) return '<span class="flat">0.0</span>';
+    return '<span class="' + (v > 0 ? "up" : "down") + '">' + (v > 0 ? "▲" : "▼") + Math.abs(v).toFixed(1) + "</span>";
+  }
+
+  var COLS = [
+    { key: "team", label: "Team", cls: "team", get: function (r) { return r.name; },
+      cell: function (r) { return "<b>" + r.abbr + "</b> <span>" + esc(r.city) + " " + esc(r.nickname) + "</span>"; } },
+    { key: "div", label: "Div", cls: "left", get: function (r) { return r.conf + DIV_ORDER.indexOf(r.div); },
+      cell: function (r) { return '<span class="na">' + r.conf + " · </span>" + r.div; } },
+    { key: "ly", label: "25-26", title: "2025-26 final regular season record", get: function (r) { return r.lyW; },
+      cell: function (r) { return r.lyW === null ? val(DASH) : r.lyW + "-" + r.lyL; } }
+  ];
+  BOOKS.forEach(function (b) { COLS = COLS.concat(bookCols(b)); });
+  COLS = COLS.concat([
+    { key: "cons", label: "Line", grp: "cons", cls: "bl cons", title: "Consensus: median total across available books",
+      get: function (r) { return r.cons; },
+      cell: function (r) { return val(fmtTotal(r.cons)) + (r.nBooks && r.nBooks < 4 ? '<span class="bk" title="Books in consensus">' + r.nBooks + "bk</span>" : ""); } },
+    { key: "consMove", label: "Move", grp: "cons", title: "Consensus movement",
+      get: function (r) { return r.consMove; }, cell: function (r) { return consMoveCell(r.consMove); } },
+    { key: "delta", label: "vs LY", grp: "cons", title: "Consensus line minus 2025-26 wins",
+      get: function (r) { return r.delta; }, cell: function (r) { return signedCell(r.delta); } },
+    { key: "bestOver", label: "Best over", cls: "bl", get: function (r) { return r.bestOver ? r.bestOver.total : null; },
+      cell: function (r) { return bestCell(r.bestOver, "over"); } },
+    { key: "bestUnder", label: "Best under", get: function (r) { return r.bestUnder ? r.bestUnder.total : null; },
+      cell: function (r) { return bestCell(r.bestUnder, "under"); } }
+  ]);
+  var COL_BY_KEY = {};
+  COLS.forEach(function (c) { COL_BY_KEY[c.key] = c; });
+
+  // ---------------------------------------------------------------- state
+  var state = { q: "", conf: "", div: "", group: "flat", sort: "cons", dir: -1 };
+  var saved = recall("nbawt-view");
+  if (saved) {
+    try {
+      var s = JSON.parse(saved);
+      if (COL_BY_KEY[s.sort]) state.sort = s.sort;
+      if (s.dir === 1 || s.dir === -1) state.dir = s.dir;
+      if (["flat", "conf", "div"].indexOf(s.group) >= 0) state.group = s.group;
+    } catch (e) { /* ignore */ }
+  }
+  function persist() { store("nbawt-view", JSON.stringify({ sort: state.sort, dir: state.dir, group: state.group })); }
+
+  var ROWS = [], LINES = null;
+
+  // -------------------------------------------------------------- sorting
+  function sortRows(rows) {
+    var col = COL_BY_KEY[state.sort];
+    return rows.slice().sort(function (p, q) {
+      var a = col.get(p), b = col.get(q);
+      var an = a === null || a === undefined, bn = b === null || b === undefined;
+      if (an && bn) return p.name < q.name ? -1 : 1;
+      if (an) return 1;   // missing always last
+      if (bn) return -1;
+      var c = typeof a === "string" ? a.localeCompare(b) : a - b;
+      return c * state.dir || (p.name < q.name ? -1 : 1);
+    });
+  }
+
+  function filtered() {
+    var q = state.q.trim().toLowerCase();
+    return ROWS.filter(function (r) {
+      if (state.conf && r.conf !== state.conf) return false;
+      if (state.div && r.div !== state.div) return false;
+      if (q && (r.name + " " + r.abbr).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+
+  function grouped(rows) {
+    if (state.group === "flat") return [{ label: null, rows: sortRows(rows) }];
+    var keys = state.group === "conf" ? ["East", "West"] : DIV_ORDER;
+    return keys.map(function (k) {
+      var rs = rows.filter(function (r) { return (state.group === "conf" ? r.conf : r.div) === k; });
+      var label = state.group === "conf" ? k + "ern Conference" : (DIVS.East.indexOf(k) >= 0 ? "East · " : "West · ") + k;
+      return { label: label, rows: sortRows(rs) };
+    }).filter(function (g) { return g.rows.length; });
+  }
+
+  // ------------------------------------------------------------ rendering
+  function renderTable(groups) {
+    var h = "<thead><tr>";
+    h += '<th class="team" colspan="3"></th>';
+    BOOKS.forEach(function (b) { h += '<th class="grp" colspan="4">' + BOOK_NAME[b] + "</th>"; });
+    h += '<th class="grp" colspan="3">Consensus</th><th class="grp" colspan="2">Best available</th>';
+    h += "</tr><tr>";
+    COLS.forEach(function (c) {
+      var sorted = state.sort === c.key;
+      h += '<th data-key="' + c.key + '" class="' + (c.cls || "") + (sorted ? " sorted" : "") + '"' +
+        (c.title ? ' title="' + esc(c.title) + '"' : "") +
+        ' aria-sort="' + (sorted ? (state.dir > 0 ? "ascending" : "descending") : "none") + '">' +
+        c.label + (sorted ? '<span class="arrow">' + (state.dir > 0 ? "▲" : "▼") + "</span>" : "") + "</th>";
+    });
+    h += "</tr></thead><tbody>";
+    var n = 0;
+    groups.forEach(function (g) {
+      if (g.label) h += '<tr class="group"><td colspan="' + COLS.length + '">' + g.label + " (" + g.rows.length + ")</td></tr>";
+      g.rows.forEach(function (r) {
+        n++;
+        h += "<tr>";
+        COLS.forEach(function (c) {
+          var cls = [c.cls || "", c.best ? c.best(r) : ""].join(" ").trim();
+          h += "<td" + (cls ? ' class="' + cls + '"' : "") + ">" + c.cell(r) + "</td>";
+        });
+        h += "</tr>";
+      });
+    });
+    if (!n) h += '<tr><td class="empty" colspan="' + COLS.length + '">No teams match.</td></tr>';
+    h += "</tbody>";
+    el("tbl").innerHTML = h;
+  }
+
+  function renderCards(groups) {
+    var h = "", n = 0;
+    groups.forEach(function (g) {
+      if (g.label) h += '<div class="group-h">' + g.label + "</div>";
+      g.rows.forEach(function (r) {
+        n++;
+        h += '<div class="card"><div class="card-h"><div class="nm">' + r.abbr + " <span>" + esc(r.name) + "</span></div>" +
+          '<div class="cd">' + r.conf + " · " + r.div + "</div></div>";
+        h += '<div class="stats">' +
+          '<span><span class="k">25-26 </span>' + (r.lyW === null ? DASH : r.lyW + "-" + r.lyL) + "</span>" +
+          '<span><span class="k">Consensus </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
+          '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span></div>";
+        h += "<table><thead><tr><th>Book</th><th>Tot</th><th>O</th><th>U</th><th>NV O</th></tr></thead><tbody>";
+        BOOKS.forEach(function (b) {
+          var cols = bookCols(b);
+          h += "<tr><td>" + BOOK_SHORT[b] + "</td>";
+          cols.forEach(function (c) {
+            var cls = c.best ? c.best(r) : "";
+            h += "<td" + (cls ? ' class="' + cls + (c.cls && c.cls.indexOf("tot") >= 0 ? " tot" : "") + '"' : "") + ">" + c.cell(r) + "</td>";
+          });
+          h += "</tr>";
+        });
+        h += "</tbody></table>";
+        h += '<div class="best-line"><span><span class="k">Best over </span>' + bestCell(r.bestOver, "over") + "</span>" +
+          '<span><span class="k">Best under </span>' + bestCell(r.bestUnder, "under") + "</span></div></div>";
+      });
+    });
+    if (!n) h = '<div class="empty">No teams match.</div>';
+    el("cards").innerHTML = h;
+  }
+
+  function render() {
+    var g = grouped(filtered());
+    renderTable(g);
+    renderCards(g);
+    el("msort").value = state.sort;
+    el("mdir").innerHTML = state.dir > 0 ? "&uarr;" : "&darr;";
+    Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-group") === state.group));
+    });
+  }
+
+  // ------------------------------------------------------------- controls
+  function fillDivs() {
+    var opts = state.conf ? DIVS[state.conf] : DIV_ORDER;
+    if (state.div && opts.indexOf(state.div) < 0) state.div = "";
+    el("div").innerHTML = '<option value="">All</option>' + opts.map(function (d) {
+      return "<option" + (d === state.div ? " selected" : "") + ">" + d + "</option>";
+    }).join("");
+  }
+  function setSort(key) {
+    if (state.sort === key) state.dir = -state.dir;
+    else { state.sort = key; state.dir = key === "team" || key === "div" ? 1 : -1; }
+    persist();
+    render();
+  }
+
+  el("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+  el("conf").addEventListener("change", function (e) { state.conf = e.target.value; fillDivs(); render(); });
+  el("div").addEventListener("change", function (e) { state.div = e.target.value; render(); });
+  Array.prototype.forEach.call(document.querySelectorAll(".seg button"), function (b) {
+    b.addEventListener("click", function () { state.group = b.getAttribute("data-group"); persist(); render(); });
+  });
+  el("tbl").addEventListener("click", function (e) {
+    var th = e.target.closest("th[data-key]");
+    if (th) setSort(th.getAttribute("data-key"));
+  });
+  el("msort").innerHTML = COLS.map(function (c) {
+    var lbl = c.grp && BOOK_NAME[c.grp] ? BOOK_NAME[c.grp] + " " + c.label : c.grp === "cons" ? "Consensus " + c.label : c.label;
+    return '<option value="' + c.key + '">' + lbl + "</option>";
+  }).join("");
+  el("msort").addEventListener("change", function (e) { state.sort = e.target.value; persist(); render(); });
+  el("mdir").addEventListener("click", function () { state.dir = -state.dir; persist(); render(); });
+
+  // ----------------------------------------------------------------- load
+  function getJSON(path) {
+    return fetch(path, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error(path + ": HTTP " + r.status);
+      return r.json();
+    });
+  }
+
+  var banners = [];
+  function warn(msg) { banners.push(msg); }
+
+  Promise.all([
+    getJSON("data/lines.json").catch(function (e) { return { _err: e }; }),
+    getJSON("data/manual_overrides.json").catch(function (e) { return { _err: e }; }),
+    getJSON("data/last_season.json").catch(function (e) { return { _err: e }; })
+  ]).then(function (res) {
+    var lines = res[0]._err ? null : res[0];
+    var ov = res[1]._err ? null : res[1];
+    var last = res[2]._err ? null : res[2];
+    LINES = lines;
+
+    if (location.protocol === "file:") {
+      warn("Opened from disk, so the browser blocks loading the data files. Run <code>python -m http.server</code> in this folder and open http://localhost:8000.");
+    } else {
+      if (!lines) warn("Scraped lines unavailable (" + esc(res[0]._err.message) + "). Showing manual overrides only.");
+      if (!last) warn("2025-26 records unavailable (" + esc(res[2]._err.message) + ").");
+    }
+    if (lines && lines.sources) {
+      Object.keys(lines.sources).forEach(function (k) {
+        var s = lines.sources[k];
+        if (!s.ok) warn("Source <b>" + esc(k) + "</b> failed on the last run: " + esc(s.error || "") + ". Its books show " + DASH + " unless overridden.");
+      });
+    }
+
+    ROWS = buildRows(lines, ov, last, warn);
+    var nOv = ov && Array.isArray(ov.overrides) ? ov.overrides.length : 0;
+
+    // Header meta
+    var basis = lines && lines.opening_basis === "open" ? "since open" : "since first tracked";
+    var first = lines && lines.first_tracked_at;
+    el("updated").innerHTML = lines
+      ? "Last updated " + fmtTime(lines.generated_at) + " · Movement " + basis + (first && basis !== "since open" ? " (" + fmtDate(first) + ")" : "")
+      : "Last updated " + DASH;
+
+    el("legend").innerHTML =
+      '<span><span class="swatch" style="background:var(--best-o);box-shadow:inset 2px 0 0 var(--best-o-line)"></span>Best over: lowest total, then best over price</span>' +
+      '<span><span class="swatch" style="background:var(--best-u);box-shadow:inset -2px 0 0 var(--best-u-line)"></span>Best under: highest total, then best under price</span>' +
+      '<span><span class="up">▲</span><span class="down">▼</span> Movement ' + basis + ". On prices, ▲ = that side got more expensive</span>" +
+      "<span>NV O = no-vig over probability</span>" +
+      (nOv ? '<span><span class="ov" style="vertical-align:0">&#9679;</span> Manual override (' + nOv + ")</span>" : "");
+
+    var srcBits = [];
+    if (lines && lines.book_source && lines.sources) {
+      BOOKS.forEach(function (b) {
+        var sk = lines.book_source[b], s = lines.sources[sk];
+        srcBits.push(BOOK_NAME[b] + ": " + (s ? '<a href="' + esc(s.url) + '" rel="noopener">' + esc(sk === "fanduel" ? "FanDuel" : "VegasInsider") + "</a>" : esc(sk)));
+      });
+    }
+    el("footer").innerHTML =
+      "Preseason lines only. Data: " + (srcBits.join(" · ") || DASH) + ". " +
+      "DraftKings, BetMGM and Caesars under prices aren't published by VegasInsider and show " + DASH + " unless added in manual_overrides.json. " +
+      "2025-26 records: " + (last && last.source ? '<a href="' + esc(last.source) + '" rel="noopener">Basketball-Reference</a>' : DASH) + ".";
+
+    el("banners").innerHTML = banners.map(function (b) { return '<div class="banner">' + b + "</div>"; }).join("");
+    fillDivs();
+    render();
+  });
+})();
+</script>
+</body>
+</html>
