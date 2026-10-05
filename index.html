@@ -174,6 +174,10 @@ td.cons { font-weight: 600; }
 .src-list li { margin: 4px 0; }
 .src-list a, .drawer a { color: var(--accent); }
 
+.note-ico { color: var(--accent); font-size: 13px; }
+.drawer textarea { width: 100%; min-height: 90px; resize: vertical; font-size: 13px; }
+.saved { color: var(--faint); font-size: 11px; }
+#sanity b { color: var(--text); font-weight: 600; }
 footer { color: var(--faint); font-size: 11px; margin-top: 14px; line-height: 1.6; }
 footer a { color: var(--muted); }
 </style>
@@ -183,6 +187,7 @@ footer a { color: var(--muted); }
   <header>
     <h1>NBA Win Totals 2026-27</h1>
     <span class="meta" id="updated">Loading...</span>
+    <span class="meta" id="sanity"></span>
     <span class="spacer"></span>
     <button id="theme" type="button" aria-label="Toggle light/dark mode">Light mode</button>
   </header>
@@ -205,6 +210,9 @@ footer a { color: var(--muted); }
       <button type="button" data-view="full" aria-pressed="false">Full view</button>
     </div>
     <button type="button" id="mine" class="tgl" aria-pressed="false">My picks only</button>
+    <button type="button" id="export" title="Download your picks, notes and parlay slips as one JSON file">Export</button>
+    <button type="button" id="import" title="Load a file made with Export (replaces this browser's picks, notes and slips)">Import</button>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
     <label class="mobile-sort">Sort
       <select id="msort"></select>
       <button type="button" id="mdir" aria-label="Toggle sort direction">&darr;</button>
@@ -425,7 +433,7 @@ footer a { color: var(--muted); }
         abbr: a, city: t[1], nickname: t[2], name: t[1] + " " + t[2], conf: t[3], div: t[4],
         lyW: lastTeams[a] && isNum(lastTeams[a].w) ? lastTeams[a].w : null,
         lyL: lastTeams[a] && isNum(lastTeams[a].l) ? lastTeams[a].l : null,
-        pythW: null,
+        pythW: lastTeams[a] && isNum(lastTeams[a].pw) ? lastTeams[a].pw : null,
         b: {}, an: [], anAll: [], anLatest: {}, anOver: 0, anUnder: 0, proj: null,
         experts: [], expertAvg: null
       };
@@ -440,6 +448,8 @@ footer a { color: var(--muted); }
           // No-vig: normalize the two implied probabilities to sum to 100%
           nvOver: (io !== null && iu !== null) ? io / (io + iu) : null,
           nvUnder: (io !== null && iu !== null) ? iu / (io + iu) : null,
+          // Hold (overround): implied over + implied under - 100%
+          hold: (io !== null && iu !== null) ? io + iu - 1 : null,
           mvTotal: op ? diff(cur.total, op.total) : null,
           // Price movement in implied probability, only when the total hasn't moved
           mvOver: (op && cur.total === op.total && implied(op.over) !== null && io !== null) ? io - implied(op.over) : null,
@@ -449,6 +459,7 @@ footer a { color: var(--muted); }
         if (isNum(cur.total)) totals.push(cur.total);
         if (op && isNum(op.total)) openTotals.push(op.total);
       });
+      row.luck = diff(row.lyW, row.pythW);
       row.nBooks = totals.length;
       row.cons = median(totals);
       row.consOpen = median(openTotals);
@@ -530,6 +541,21 @@ footer a { color: var(--muted); }
   var PICKS = cleanPicks(loadJSONStore("nbawt-picks"));
   function savePicks() { store("nbawt-picks", JSON.stringify(PICKS)); }
 
+  // Team notes: { ABBR: "free text" }
+  var NOTE_MAX = 4000;
+  function cleanNotes(o) {
+    var out = {};
+    Object.keys(o || {}).forEach(function (k) {
+      if (TEAM_SET[k] && typeof o[k] === "string" && o[k].trim()) out[k] = o[k].slice(0, NOTE_MAX);
+    });
+    return out;
+  }
+  var NOTES = cleanNotes(loadJSONStore("nbawt-notes"));
+  function saveNotes() { store("nbawt-notes", JSON.stringify(NOTES)); }
+
+  // Parlay slips live under "nbawt-slips" (see slip builder); export/import carries them as-is.
+  function loadSlipsRaw() { var s = loadJSONStore("nbawt-slips"); return Array.isArray(s) ? s : []; }
+
   // -------------------------------------------------------------- cells
   function mvSpan(d, isPrice, title) {
     if (d === null || Math.abs(d) < 1e-9) return "";
@@ -608,6 +634,14 @@ footer a { color: var(--muted); }
     return '<span title="' + esc(r.proj.system + " · " + r.proj.date) + '">' + r.proj.projected_wins.toFixed(1) + "</span>" +
       (d === null ? "" : " / " + signedCell(d));
   }
+  function signedInt(v) {
+    return '<span class="' + (v > 0 ? "up" : v < 0 ? "down" : "flat") + '">' + (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + "</span>";
+  }
+  function noteIcon(r) {
+    var n = NOTES[r.abbr];
+    if (!n) return "";
+    return '<span class="note-ico" title="' + esc(n.length > 300 ? n.slice(0, 300) + "…" : n) + '" aria-label="Has note">&#9998;</span>';
+  }
   function expertCell(r) {
     if (r.expertAvg === null) return val(DASH);
     return r.expertAvg.toFixed(1) + ' <span class="bk">(' + r.experts.length + ")</span>";
@@ -651,7 +685,10 @@ footer a { color: var(--muted); }
           var x = r.b[b];
           if (x.nvOver === null) return val(DASH);
           return '<span title="No-vig: over ' + fmtPct(x.nvOver) + " / under " + fmtPct(x.nvUnder) + '">' + fmtPct(x.nvOver) + "</span>";
-        } }
+        } },
+      { key: b + ".hold", label: "Hold", grp: b, view: "full", title: BOOK_SHORT[b] + " hold: implied over + implied under - 100% (needs both prices)",
+        get: function (r) { return r.b[b].hold; },
+        cell: function (r) { return r.b[b].hold === null ? val(DASH) : fmtPct(r.b[b].hold); } }
     ];
   }
   function bestCol(side) {
@@ -676,9 +713,12 @@ footer a { color: var(--muted); }
       cell: function (r) { return '<span class="na">' + r.conf + " · </span>" + r.div; } },
     { key: "ly", label: "25-26", view: "both", title: "2025-26 final regular season record", get: function (r) { return r.lyW; },
       cell: function (r) { return r.lyW === null ? val(DASH) : r.lyW + "-" + r.lyL; } },
-    { key: "pyth", label: "Pyth W", view: "both", title: "2025-26 Pythagorean (expected) wins, Basketball-Reference",
+    { key: "pyth", label: "Pyth W", view: "both", title: "2025-26 Pythagorean (expected) wins from point differential, Basketball-Reference",
       get: function (r) { return r.pythW; },
       cell: function (r) { return isNum(r.pythW) ? String(r.pythW) : val(DASH); } },
+    { key: "luck", label: "Luck", view: "both", title: "2025-26 actual wins minus Pythagorean wins (positive = won more than point differential suggests)",
+      get: function (r) { return r.luck; },
+      cell: function (r) { return isNum(r.luck) ? signedInt(r.luck) : val(DASH); } },
     { key: "cons", label: "Line", grp: "cons", view: "both", cls: "bl cons", title: "Consensus: median total across available books",
       get: function (r) { return r.cons; },
       cell: function (r) { return val(fmtTotal(r.cons)) + (r.nBooks && r.nBooks < 4 ? '<span class="bk" title="Books in consensus">' + r.nBooks + "bk</span>" : ""); } },
@@ -700,7 +740,9 @@ footer a { color: var(--muted); }
       get: function (r) { return r.proj && r.cons !== null ? r.proj.projected_wins - r.cons : null; }, cell: projCell },
     { key: "mine", label: "My pick", grp: "me", view: "both", cls: "bl left", title: "Your tagged pick (sorts overs before unders, then by line)",
       get: function (r) { var p = PICKS[r.abbr]; return p ? (p.side === "over" ? 0 : 100) + p.total : null; },
-      cell: myPickCell }
+      cell: myPickCell },
+    { key: "notes", label: "Note", grp: "me", view: "both", cls: "left", title: "Your team notes (edit in the team drawer). Sorts teams with notes first",
+      get: function (r) { return NOTES[r.abbr] ? 1 : null; }, cell: noteIcon }
   ]);
   var COL_BY_KEY = {};
   COLS.forEach(function (c) { COL_BY_KEY[c.key] = c; });
@@ -769,6 +811,20 @@ footer a { color: var(--muted); }
   }
 
   // ------------------------------------------------------------ rendering
+  // Average hold per book over teams where it has both prices
+  var BOOK_HOLD = {};
+  function computeBookHolds() {
+    BOOKS.forEach(function (b) {
+      var hs = ROWS.map(function (r) { return r.b[b].hold; }).filter(function (h) { return h !== null; });
+      BOOK_HOLD[b] = hs.length ? { avg: hs.reduce(function (a, c) { return a + c; }, 0) / hs.length, n: hs.length } : null;
+    });
+  }
+  function bookHoldLabel(b) {
+    var h = BOOK_HOLD[b];
+    return ' <span class="bk" title="' + (h ? "Average hold over " + h.n + " teams with both prices" : "No under prices, so hold can't be computed") + '">' +
+      (h ? "hold " + fmtPct(h.avg) : "hold " + DASH) + "</span>";
+  }
+
   function renderTable(groups, cols) {
     var h = "<thead><tr>";
     var spans = [];
@@ -778,7 +834,7 @@ footer a { color: var(--muted); }
       else spans.push({ g: g, n: 1 });
     });
     spans.forEach(function (sp, i) {
-      var lbl = BOOK_NAME[sp.g] || GRP_LABEL[sp.g] || "";
+      var lbl = BOOK_NAME[sp.g] ? BOOK_NAME[sp.g] + bookHoldLabel(sp.g) : GRP_LABEL[sp.g] || "";
       h += lbl ? '<th class="grp" colspan="' + sp.n + '">' + lbl + "</th>"
                : '<th class="' + (i === 0 ? "team" : "") + '" colspan="' + sp.n + '"></th>';
     });
@@ -824,7 +880,7 @@ footer a { color: var(--muted); }
           '<div class="cd">' + r.conf + " · " + r.div + "</div></div>";
         h += '<div class="stats">' +
           '<span><span class="k">25-26 </span>' + (r.lyW === null ? DASH : r.lyW + "-" + r.lyL) + "</span>" +
-          '<span><span class="k">Pyth </span>' + (isNum(r.pythW) ? r.pythW : DASH) + "</span>" +
+          '<span><span class="k">Pyth </span>' + (isNum(r.pythW) ? r.pythW : DASH) + (isNum(r.luck) ? " (" + signedInt(r.luck) + ")" : "") + "</span>" +
           '<span><span class="k">Line </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
           '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span></div>";
         h += '<div class="bestrow">' + cardBest(r, r.bestOver, "over") + cardBest(r, r.bestUnder, "under") + "</div>";
@@ -832,7 +888,8 @@ footer a { color: var(--muted); }
           '<span><span class="k">Expert W </span>' + expertCell(r) + "</span>" +
           '<span><span class="k">Rec </span>' + val(DASH) + "</span>" +
           '<span><span class="k">Analysts </span>' + (analystCell(r) || DASH) + "</span>" +
-          '<span><span class="k">My pick </span>' + myPickCell(r) + "</span></div></div>";
+          '<span><span class="k">My pick </span>' + myPickCell(r) + "</span>" +
+          (NOTES[r.abbr] ? "<span>" + noteIcon(r) + "</span>" : "") + "</div></div>";
       });
     });
     if (!n) h = '<div class="empty">No teams match.</div>';
@@ -841,7 +898,7 @@ footer a { color: var(--muted); }
 
   // -------------------------------------------------------------- drawer
   function drawerBookTable(r) {
-    var h = "<table><thead><tr><th>Book</th><th>Line</th><th>Over</th><th>Under</th><th>NV O</th><th>Mkt EV O</th><th>Mkt EV U</th></tr></thead><tbody>";
+    var h = "<table><thead><tr><th>Book</th><th>Line</th><th>Over</th><th>Under</th><th>NV O</th><th>Hold</th><th>Mkt EV O</th><th>Mkt EV U</th></tr></thead><tbody>";
     BOOKS.forEach(function (b) {
       var x = r.b[b];
       var bo = r.bestOver && r.bestOver.books.indexOf(b) >= 0, bu = r.bestUnder && r.bestUnder.books.indexOf(b) >= 0;
@@ -851,6 +908,7 @@ footer a { color: var(--muted); }
         h += "<td" + (cls.trim() ? ' class="' + cls.trim() + '"' : "") + pickAttrs(r.abbr, b, side, x.total) + ">" + priceCell(r, b, side) + "</td>";
       });
       h += "<td>" + (x.nvOver === null ? val(DASH) : fmtPct(x.nvOver)) + "</td>" +
+        "<td>" + (x.hold === null ? val(DASH) : fmtPct(x.hold)) + "</td>" +
         "<td>" + (x.evover === null ? val(DASH) : fmtEV(x.evover)) + "</td>" +
         "<td>" + (x.evunder === null ? val(DASH) : fmtEV(x.evunder)) + "</td></tr>";
     });
@@ -888,6 +946,7 @@ footer a { color: var(--muted); }
     h += '<div class="stats">' +
       '<span><span class="k">25-26 </span>' + (r.lyW === null ? DASH : r.lyW + "-" + r.lyL) + "</span>" +
       '<span><span class="k">Pyth W </span>' + (isNum(r.pythW) ? r.pythW : DASH) + "</span>" +
+      '<span><span class="k">Luck </span>' + (isNum(r.luck) ? signedInt(r.luck) : DASH) + "</span>" +
       '<span><span class="k">Consensus </span><b>' + fmtTotal(r.cons) + "</b> " + consMoveCell(r.consMove) + "</span>" +
       '<span><span class="k">vs LY </span>' + signedCell(r.delta) + "</span>" +
       '<span><span class="k">Proj </span>' + projCell(r) + "</span></div>";
@@ -899,6 +958,8 @@ footer a { color: var(--muted); }
       : '<p class="note">None. Tap any price above.</p>');
     h += "<h3>Analyst picks (" + r.an.length + ")</h3>" + drawerAnalysts(r);
     h += "<h3>Expert win estimates</h3>" + drawerExperts(r);
+    h += '<h3>My notes</h3><textarea id="note-text" data-note="' + r.abbr + '" maxlength="' + NOTE_MAX + '" placeholder="Your notes on ' +
+      esc(r.nickname) + ' (saved in this browser)">' + esc(NOTES[r.abbr] || "") + '</textarea><div class="saved" id="note-saved"></div>';
     d.innerHTML = h;
   }
   function openDrawer(abbr) {
@@ -916,10 +977,13 @@ footer a { color: var(--muted); }
   }
 
   function render() {
+    renderMain();
+    renderDrawer();
+  }
+  function renderMain() {
     var g = grouped(filtered());
     renderTable(g, visibleCols());
     renderCards(g);
-    renderDrawer();
     el("msort").value = state.sort;
     el("mdir").innerHTML = state.dir > 0 ? "&uarr;" : "&darr;";
     el("mine").setAttribute("aria-pressed", String(state.mine));
@@ -976,6 +1040,57 @@ footer a { color: var(--muted); }
     });
   });
   el("scrim").addEventListener("click", closeDrawer);
+  var noteTimer = null;
+  el("drawer").addEventListener("input", function (e) {
+    var a = e.target.getAttribute && e.target.getAttribute("data-note");
+    if (!a) return;
+    var v = e.target.value;
+    if (v.trim()) NOTES[a] = v.slice(0, NOTE_MAX); else delete NOTES[a];
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(function () {
+      saveNotes();
+      var s = el("note-saved");
+      if (s) s.textContent = "Saved " + new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      renderMain();
+    }, 400);
+  });
+
+  // ------------------------------------------------------ export / import
+  // One JSON file with picks, notes and parlay slips, to move state between devices.
+  var EXPORT_APP = "nba-win-totals-2026-27";
+  el("export").addEventListener("click", function () {
+    var doc = { app: EXPORT_APP, version: 1, exported_at: new Date().toISOString(),
+                picks: PICKS, notes: NOTES, slips: loadSlipsRaw() };
+    var blob = new Blob([JSON.stringify(doc, null, 1)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "nba-win-totals-my-data-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+  el("import").addEventListener("click", function () { el("import-file").click(); });
+  el("import-file").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var doc;
+      try { doc = JSON.parse(rd.result); } catch (err) { alert("That file isn't valid JSON."); return; }
+      if (!doc || doc.app !== EXPORT_APP) { alert("That file wasn't made with this page's Export button."); return; }
+      var picks = cleanPicks(doc.picks), notes = cleanNotes(doc.notes), slips = Array.isArray(doc.slips) ? doc.slips : [];
+      var msg = "Replace this browser's data with the file?\n\nFile: " + Object.keys(picks).length + " picks, " +
+        Object.keys(notes).length + " notes, " + slips.length + " slips\nHere now: " + Object.keys(PICKS).length + " picks, " +
+        Object.keys(NOTES).length + " notes, " + loadSlipsRaw().length + " slips";
+      if (!confirm(msg)) return;
+      PICKS = picks; NOTES = notes;
+      savePicks(); saveNotes(); store("nbawt-slips", JSON.stringify(slips));
+      if (typeof onSlipsImported === "function") onSlipsImported();
+      render();
+    };
+    rd.readAsText(f);
+  });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.drawer) closeDrawer(); });
 
   el("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
@@ -1035,6 +1150,17 @@ footer a { color: var(--muted); }
     ROWS.forEach(function (r) { ROW_BY[r.abbr] = r; });
     attachAnalysts(ROWS, anDoc);
     attachProjections(ROWS, projDoc);
+    computeBookHolds();
+    // Header sanity check: the 30 lines should roughly add up to the 1230 wins that exist
+    var consAll = ROWS.map(function (r) { return r.cons; }).filter(isNum);
+    if (consAll.length) {
+      var sum = consAll.reduce(function (a, c) { return a + c; }, 0), d = sum - 1230;
+      el("sanity").innerHTML = "· Sum of lines <b>" + sum.toFixed(1) + "</b> vs 1230 (" + fmtSigned(d) + ")" +
+        (consAll.length < 30 ? " · only " + consAll.length + "/30 teams have a line" : "") + " · " +
+        (Math.abs(d) < 0.05 ? "matches the wins that exist" : d > 0
+          ? "market implies more wins than exist, which favors unders collectively"
+          : "market implies fewer wins than exist, which favors overs collectively");
+    }
     var sus = [];
     ROWS.forEach(function (r) { BOOKS.forEach(function (b) { if (r.b[b].suspect) sus.push(r.abbr + " " + BOOK_SHORT[b]); }); });
     if (sus.length) warn("Excluded as suspected alternate lines (2+ wins off the other books): <b>" + sus.join(", ") +

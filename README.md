@@ -20,7 +20,10 @@ BetMGM and Caesars. It's a static page (`index.html`) that reads JSON from `data
 - DraftKings and Caesars block direct API requests (Akamai/CloudFront 403s),
   which is why they come through VegasInsider.
 - 2025-26 records come from Basketball-Reference (`scraper/fetch_last_season.py`,
-  a one-time pull, verified 30 teams / 1230 W / 1230 L).
+  a one-time pull, verified 30 teams / 1230 W / 1230 L). The same script pulls
+  2025-26 **Pythagorean W-L** (league page, Advanced Stats table: PW/PL) and
+  fails unless all 30 teams are present, each PW+PL = 82, and the PW total is
+  within 15 of 1230 (it was 1239 on 10/5).
 
 ## Setup
 
@@ -166,6 +169,21 @@ python -m http.server 8000      # then open http://localhost:8000
   team), e.g. `Over 3-1`. Sorts by net lean (overs minus unders). Details and
   source links are in the drawer.
 - **Proj:** projected wins / difference vs consensus (`52.1 / +2.6`). Full view and drawer.
+- **Pyth W / Luck:** 2025-26 Pythagorean wins (from point differential) and
+  Luck = actual wins minus Pyth W. Positive luck means a team won more than its
+  margin suggests. Both sortable.
+- **Hold:** per book per team, implied over + implied under minus 100%, only where
+  both prices exist (today that's FanDuel). Shown in the full view (each book's
+  header also shows its average hold) and in the drawer.
+- **Sum check (header):** the sum of the 30 consensus lines vs the 1230 wins that
+  exist. Above 1230 means the market implies more wins than exist, which favors
+  unders collectively; below favors overs.
+- **Notes:** free text per team, typed in the drawer and autosaved to this browser
+  (`nbawt-notes`). A ✎ shows in the row when a note exists (hover to read it).
+  The Note column sorts teams with notes first.
+- **Export / Import:** Export downloads one JSON file with your picks, notes and
+  parlay slips. Import on another device replaces that browser's picks, notes and
+  slips after a confirmation that shows the counts. No backend.
 
 ## Analyst picks and projections (`scraper/analyst_scraper.py`)
 
