@@ -62,6 +62,12 @@ so the scraper can't confirm the main line. Instead, a DraftKings total that's
 - printed after the coverage table, and shown on the page as `alt?` plus a banner;
 - also ignored in older snapshots when working out "first tracked" lines.
 
+Rechecked 10/12: VI still shows DK BOS o53.5 +150 and PHI o48.5 -200, DraftKings'
+API still returns 403, and no other free source we checked (SportsbookReview, Covers,
+OddsShark) lists DK win totals, so both stay excluded. CHA DK o39.5 +100 is newly
+flagged: the other books moved down to 37.5 and DK didn't (BetMGM is also still at
+39.5, so this may be a real main line that just hasn't moved; check the app).
+
 To fill it in, check the DraftKings app and add an override, e.g.
 `{"team": "BOS", "book": "draftkings", "total": 51.5, "over": -110}`.
 An override's total replaces the `alt?` flag. Settings: `SUSPECT_ALT_BOOKS` /
@@ -151,6 +157,10 @@ python -m http.server 8000      # then open http://localhost:8000
   Expert W, Rec, Analysts, My pick. **Full view** adds every book's Tot / O / U /
   NV O, plus Proj. The header row and Team column are sticky, so you keep your place
   when scrolling sideways. Mobile cards always use the compact set.
+- **Biggest movers strip** (above the table): top 5 consensus line moves and top 5
+  price moves since first tracked (Oct 5), with direction. Price moves are the change
+  in implied probability for one book/side, only where that book's total hasn't moved
+  (▲ pricier = that side got more expensive). Click an item to open the team.
 - **Team drawer:** click a row (or tap a card) to open a side drawer (a bottom
   sheet on mobile) with every book's line, no-vig %, Market EV per side, your pick,
   analyst sources and expert win numbers. Esc, the X, or clicking outside closes it.

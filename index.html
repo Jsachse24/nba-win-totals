@@ -200,6 +200,13 @@ table.legs { white-space: normal; }
 .chk { display: flex; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0; }
 .expo { font-size: 12px; }
 .expo td, .expo th { padding: 3px 6px; }
+.movers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; }
+.movers > div { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 6px 10px; font-size: 12px; }
+.movers h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+.movers ol { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.movers li { white-space: nowrap; cursor: pointer; }
+.movers li:hover b { text-decoration: underline; }
+@media (max-width: 767px) { .movers { grid-template-columns: 1fr; } .movers li { white-space: normal; } }
 footer { color: var(--faint); font-size: 11px; margin-top: 14px; line-height: 1.6; }
 footer a { color: var(--muted); }
 </style>
@@ -243,6 +250,7 @@ footer a { color: var(--muted); }
   </div>
 
   <div class="legend" id="legend"></div>
+  <div class="movers" id="movers"></div>
 
   <div class="table-wrap"><table id="tbl"></table></div>
   <div id="cards"></div>
@@ -1250,6 +1258,42 @@ footer a { color: var(--muted); }
   }
   function openSlips() { state.drawer = null; state.slips = true; render(); var x = el("slipdrawer").querySelector("[data-close-slips]"); if (x) x.focus(); }
   function closeSlips() { state.slips = false; render(); }
+  // Biggest movers since first tracked: top 5 consensus line moves, and top 5
+  // price moves (change in implied probability, only where that book's total
+  // hasn't moved -- otherwise the prices are on different numbers).
+  var MOVERS_N = 5;
+  function moversHtml(sinceLabel) {
+    var lineMv = ROWS.filter(function (r) { return isNum(r.consMove) && r.consMove !== 0; })
+      .sort(function (p, q) { return Math.abs(q.consMove) - Math.abs(p.consMove); }).slice(0, MOVERS_N);
+    var priceMv = [];
+    ROWS.forEach(function (r) {
+      BOOKS.forEach(function (b) {
+        var x = r.b[b];
+        ["over", "under"].forEach(function (side) {
+          var d = side === "over" ? x.mvOver : x.mvUnder;
+          if (isNum(d) && Math.abs(d) > 1e-9) priceMv.push({ r: r, b: b, side: side, d: d, from: x.open[side], to: x[side], total: x.total });
+        });
+      });
+    });
+    priceMv.sort(function (p, q) { return Math.abs(q.d) - Math.abs(p.d); });
+    priceMv = priceMv.slice(0, MOVERS_N);
+    var lh = lineMv.length ? lineMv.map(function (r) {
+      var up = r.consMove > 0;
+      return '<li tabindex="0" data-team="' + r.abbr + '" title="Consensus ' + fmtTotal(r.consOpen) + " → " + fmtTotal(r.cons) + '"><b>' + r.abbr + "</b> " +
+        fmtTotal(r.consOpen) + " → " + fmtTotal(r.cons) + ' <span class="' + (up ? "up" : "down") + '">' + (up ? "▲" : "▼") +
+        Math.abs(r.consMove).toFixed(1) + (up ? " up" : " down") + "</span></li>";
+    }).join("") : '<li class="na">No consensus line has moved.</li>';
+    var ph = priceMv.length ? priceMv.map(function (m) {
+      var up = m.d > 0;
+      return '<li tabindex="0" data-team="' + m.r.abbr + '" title="' + BOOK_NAME[m.b] + " " + sideLetter(m.side) + fmtTotal(m.total) + ": " + fmtOdds(m.from) + " → " + fmtOdds(m.to) +
+        " (implied " + (up ? "+" : "−") + Math.abs(m.d * 100).toFixed(1) + ' pts)"><b>' + m.r.abbr + "</b> " + sideLetter(m.side) + fmtTotal(m.total) + " " +
+        BOOK_SHORT[m.b] + " " + fmtOdds(m.from) + " → " + fmtOdds(m.to) + ' <span class="' + (up ? "up" : "down") + '">' + (up ? "▲" : "▼") +
+        " " + m.side + " " + (up ? "pricier" : "cheaper") + "</span></li>";
+    }).join("") : '<li class="na">No price moves on unchanged totals.</li>';
+    return '<div><h4>Biggest line moves ' + esc(sinceLabel) + "</h4><ol>" + lh + "</ol></div>" +
+      '<div><h4>Biggest price moves ' + esc(sinceLabel) + "</h4><ol>" + ph + "</ol></div>";
+  }
+
   function renderMain() {
     var g = grouped(filtered());
     renderTable(g, visibleCols());
@@ -1306,7 +1350,7 @@ footer a { color: var(--muted); }
     if (t) { openDrawer(t.getAttribute("data-team")); return true; }
     return false;
   }
-  ["tbl", "cards", "drawer"].forEach(function (id) {
+  ["tbl", "cards", "drawer", "movers"].forEach(function (id) {
     el(id).addEventListener("click", activate);
     el(id).addEventListener("keydown", function (e) {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-pick], [data-team], button") && activate(e)) e.preventDefault();
@@ -1485,6 +1529,8 @@ footer a { color: var(--muted); }
     el("updated").innerHTML = lines
       ? "Last updated " + fmtTime(lines.generated_at) + " · Movement " + basis + (first && basis !== "since open" ? " (" + fmtDate(first) + ")" : "")
       : "Last updated " + DASH;
+
+    el("movers").innerHTML = lines ? moversHtml("since first tracked" + (first ? " (" + fmtDate(first) + ")" : "")) : "";
 
     el("legend").innerHTML =
       '<span><span class="swatch" style="background:var(--best-o);box-shadow:inset 2px 0 0 var(--best-o-line)"></span>Best over / ' +
