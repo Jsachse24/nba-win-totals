@@ -29,7 +29,7 @@ def main():
     by_book = {b: {a: books[a][b] for a in ABBRS} for b in BOOKS}
     errors, warnings, total_sum = validate(merged, by_book)
     print_summary(merged, src, total_sum)
-    print_suspects(lines.get("suspect_alt_lines") or [])
+    print_suspects(lines.get("suspect_alt_lines") or [], lines.get("stale_lines") or [])
     print()
     for w in warnings:
         print(f"WARN: {w}")

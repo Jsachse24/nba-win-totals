@@ -17,6 +17,10 @@ BetMGM and Caesars. It's a static page (`index.html`) that reads JSON from `data
 - VegasInsider's page text still says 2024-25. The table is current, but the
   scraper fails if VI's numbers average more than 4 wins off FanDuel's, in
   case it ever starts serving a stale season.
+- Since about 10/15, VegasInsider's win-totals table also holds a second market
+  (30 rows of bare prices like OKC +120, which look like title odds). Rows with no
+  o/u line are skipped and counted in the output. A team listed twice with a
+  win-total line still fails the scrape.
 - DraftKings and Caesars block direct API requests (Akamai/CloudFront 403s),
   which is why they come through VegasInsider.
 - 2025-26 records come from Basketball-Reference (`scraper/fetch_last_season.py`,
@@ -62,11 +66,28 @@ so the scraper can't confirm the main line. Instead, a DraftKings total that's
 - printed after the coverage table, and shown on the page as `alt?` plus a banner;
 - also ignored in older snapshots when working out "first tracked" lines.
 
-Rechecked 10/12: VI still shows DK BOS o53.5 +150 and PHI o48.5 -200, DraftKings'
-API still returns 403, and no other free source we checked (SportsbookReview, Covers,
-OddsShark) lists DK win totals, so both stay excluded. CHA DK o39.5 +100 is newly
-flagged: the other books moved down to 37.5 and DK didn't (BetMGM is also still at
-39.5, so this may be a real main line that just hasn't moved; check the app).
+**Unless it's a lagging main line.** Before excluding it, the scraper checks the
+snapshot history: if DraftKings matched the other books (within 2 wins) in an earlier
+snapshot, hasn't changed its number since, and the other books' median has moved
+**1.5+ wins** (`STALE_MOVE_WINS`) from that point, DK is just slow to move. That line is:
+
+- kept in the table (it counts toward consensus and Best over/under like any main line);
+- listed under `stale_lines` in `lines.json`, printed after the coverage table, and
+  shown on the page as `stale?` plus a banner. Hover it to see the date it last matched.
+
+It compares against the latest snapshot where DK still matched the market, not only
+the one right before it. Otherwise a lagging line would flip back to `alt?` on the
+next scrape, once the other books had stopped moving.
+
+Re-evaluated 10/15 under the snapshot rule (Oct 12 data):
+
+| Team | DK | Other books' median, Oct 5 -> Oct 12 | Result |
+|---|---|---|---|
+| CHA | o39.5 +100 (both dates) | 39.5 -> 37.5 (moved 2.0) | `stale?`, kept |
+| BOS | o53.5 +150 (both dates) | 50.5 -> 51.5 (moved 1.0; DK already 3 off on Oct 5) | `alt?`, excluded |
+| PHI | o48.5 -200 (both dates) | 50.5 -> 50.5 (no move) | `alt?`, excluded |
+
+Keeping CHA DK puts CHA's consensus at 38.5 (four books) instead of 37.5.
 
 To fill it in, check the DraftKings app and add an override, e.g.
 `{"team": "BOS", "book": "draftkings", "total": 51.5, "over": -110}`.
@@ -142,7 +163,9 @@ python -m http.server 8000      # then open http://localhost:8000
     so about -10% EV. o50.5 -105 is about -2%, so the 50.5 wins.
   - Hover any O/U price for its P(cash) and EV.
 - **Missing prices.** DK/MGM/CZR under prices aren't on VegasInsider, so those
-  offers can't be EV-ranked and are left out of Best under. In the full view and
+  offers can't be EV-ranked and are left out of Best under. The Best under column
+  is labelled "FanDuel only for most teams" until a second source for those under
+  prices is added (overrides can still add one). In the full view and
   drawer, a price that's missing while the book has a line shows as a faded `-`
   (explained once in the legend). There are no per-cell flags.
 - Price movement only shows when the total hasn't moved. Otherwise the prices are
@@ -232,6 +255,46 @@ Open **Parlay slips** (a drawer on desktop, a bottom sheet on mobile).
   and division, total stake, and teams that appear in more than one slip.
 - Slips are stored in this browser (`nbawt-slips`) and travel with Export / Import.
 
+## Expert best bets (below the table)
+
+- **Per-expert cards** for the people listed in `data/best_bets.json` (starting set:
+  Simmons, Lowe, Windhorst, Shams). A card only shows picks with a `best_bet` label
+  in `analyst_picks.json`, meaning the person explicitly called it a best bet,
+  favorite, lock or top pick, or put it in a ranked list. Ranked picks keep their
+  stated order (`#1`, `#2`...). Labeled but unranked picks show as `unranked`.
+  Conviction is never inferred from tone.
+- Each pick shows team, side, the line they took, today's consensus and whether it
+  **moved with or against** them (over: a higher line is against; under: a lower one
+  is), plus today's best available price for that side (same Market EV pick as the
+  table), the source (title, date, link, and timestamp for audio/video; YouTube links
+  jump to it), and buttons for **+ My Picks** (tags that best line) or **+ slip**.
+- No qualifying picks shows "No published win total best bets found" with the
+  `checked_on` date from `best_bets.json`. It is never filled in.
+- **Track-record badge** (e.g. `2025-26: 7-4 on stated picks (n=11, small sample)`)
+  appears only when `data/track_records.json` has graded picks for that person. Under
+  20 graded picks is labelled a small sample.
+- **Consensus best bets:** the same team + side labeled a best bet by 2+ independent
+  approved analysts (anyone in `analyst_sources.json`, not just the cards), ranked by
+  how many. **Conflicts:** teams with best bets on both sides.
+
+## Track records (`scraper/grade_picks.py`)
+
+```
+python scraper/fetch_final_records.py   # 2024-25 + 2025-26 final W-L from Basketball-Reference -> data/final_records.json
+python scraper/grade_picks.py           # grade data/track_record_picks.json -> data/track_records.json
+```
+
+`track_record_picks.json` holds past-season picks collected from public archives:
+person, season, team, side, line, `line_disclosed`, date, source. The grader refuses
+picks dated after opening night (2024-10-22 / 2025-10-21; same-day pieces count, since games tip in the evening), duplicates, and a
+line the person didn't state unless `line_source` says where it came from. Picks with
+no line are counted as ungraded, never guessed. A whole-number line that lands exactly
+is a push. Each season reports W-L-P, win rate and lines disclosed, and gets flagged
+as a small sample under 20 graded picks.
+
+Candidates for new analysts are researched and graded the same way, but **they're not
+added to `analyst_sources.json` (or the page) until approved**.
+
 ## Analyst picks and projections (`scraper/analyst_scraper.py`)
 
 Separate from the lines scraper; re-run as new episodes come out (most annual
@@ -270,6 +333,10 @@ page compares the expert average to the line instead. Rules enforced by `merge`:
 - team is canonical, side is `over`/`under`, line is null or 10-70 in half-wins;
 - video sources need a timestamp; summary is your own words, max 200 chars;
 - `basis` must be `stated` (derived sides aren't allowed in dataset A);
+- optional `best_bet`: `{"label": "best bet|favorite|lock|top pick|ranked", "rank": 1|null,
+  "list_name": "...", "evidence": "how they labeled it, own words"}`. `ranked` needs a
+  rank. Re-merging a pick that's already stored with a new `best_bet` adds the label;
+  a different label from the stored one stops the merge;
 - expert_wins: `record` needs integer wins + losses = 82; `projected_wins` has
   `losses: null`; same source/approval/date/timestamp rules as picks;
 - duplicates (same person + team + source URL) are skipped, so re-runs are safe;

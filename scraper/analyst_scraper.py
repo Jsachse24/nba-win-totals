@@ -57,6 +57,10 @@ PICK_FIELDS = ("analyst", "team", "side", "line", "source_url", "title", "date",
 # Dataset B: kind "record" = predicted W-L (wins + losses == 82); "projected_wins" = a stated win number
 WIN_KINDS = ("record", "projected_wins")
 WIN_FIELDS = ("expert", "team", "wins", "losses", "kind", "source_url", "title", "date", "timestamp", "note")
+# Optional on a pick: best_bet = {"label", "rank", "list_name", "evidence"} -- only when the
+# person explicitly called it a best bet / favorite / lock / top pick, or put it in a ranked list.
+# rank is their stated position (1 = top) or null; never inferred from tone.
+BEST_BET_LABELS = ("best bet", "favorite", "lock", "top pick", "ranked")
 REVIEW_FIELDS = ("analyst", "team", "source_url", "title", "date", "timestamp", "reason")
 DISCOVER_RE = re.compile(r"over[-\s/]?unders?|win[-\s]totals?", re.I)
 
@@ -267,6 +271,25 @@ def validate_pick(p, cfg, where):
         errs.append(f"{where}: summary must be 1-{SUMMARY_MAX} chars (own words, no long quotes)")
     if p["basis"] not in BASES:
         errs.append(f"{where}: basis must be one of {BASES}")
+    errs += validate_best_bet(p.get("best_bet"), where)
+    return errs
+
+
+def validate_best_bet(bb, where):
+    if bb is None:
+        return []
+    errs = []
+    if not isinstance(bb, dict):
+        return [f"{where}: best_bet must be an object or null"]
+    if bb.get("label") not in BEST_BET_LABELS:
+        errs.append(f"{where}: best_bet.label must be one of {BEST_BET_LABELS}")
+    r = bb.get("rank")
+    if r is not None and (isinstance(r, bool) or not isinstance(r, int) or r < 1):
+        errs.append(f"{where}: best_bet.rank must be a positive integer or null")
+    if bb.get("label") == "ranked" and r is None:
+        errs.append(f"{where}: label 'ranked' needs the stated rank")
+    if not bb.get("evidence") or len(bb["evidence"]) > SUMMARY_MAX:
+        errs.append(f"{where}: best_bet.evidence must be 1-{SUMMARY_MAX} chars (how they labeled it, own words)")
     return errs
 
 
@@ -393,6 +416,13 @@ def print_coverage():
         n = [len(v) for v in per.values()]
         people = len({who for _, who in pairs})
         print(f"  {name:<32} {n.count(0):>4} {n.count(1):>4} {n.count(2):>4} {sum(x >= 3 for x in n):>4}   {people}")
+    bb = [p for p in load_json(PICKS, {"picks": []})["picks"] if p.get("best_bet")]
+    by = {}
+    for p in bb:
+        by.setdefault(p["analyst"], []).append(p["team"])
+    print(f"\nBest bets (explicitly labeled): {len(bb)} from {len(by)} people")
+    for who in sorted(by):
+        print(f"  {who:<20} {len(by[who])}: {' '.join(sorted(by[who]))}")
 
 
 # ---------------------------------------------------------------- merge
@@ -407,7 +437,7 @@ def cmd_merge(args):
     existing = {pick_key(p): p for p in picks_doc["picks"]}
     now = datetime.now().astimezone().isoformat(timespec="seconds")
 
-    errs, added, dup = [], [], 0
+    errs, added, dup, labeled = [], [], 0, []
     for i, p in enumerate(incoming.get("picks", [])):
         e = validate_pick(p, cfg, f"incoming pick #{i}")
         if e:
@@ -419,10 +449,16 @@ def cmd_merge(args):
             if old["side"] != p["side"] or old["line"] != p["line"]:
                 errs.append(f"incoming pick #{i} {k}: conflicts with existing record "
                             f"({old['side']} {old['line']} vs {p['side']} {p['line']}) -- resolve by hand")
+            elif p.get("best_bet") and old.get("best_bet") and p["best_bet"] != old["best_bet"]:
+                errs.append(f"incoming pick #{i} {k}: best_bet differs from the existing record -- resolve by hand")
+            elif p.get("best_bet") and not old.get("best_bet"):
+                labeled.append((old, p["best_bet"]))  # same pick, now with its best-bet label
             else:
                 dup += 1
             continue
         rec = {"id": pick_id(p), **{f: p[f] for f in PICK_FIELDS}, "added_at": now}
+        if p.get("best_bet"):
+            rec["best_bet"] = p["best_bet"]
         existing[k] = rec
         added.append(rec)
 
@@ -465,15 +501,19 @@ def cmd_merge(args):
         print(f"ERROR: {e}", file=sys.stderr)
     if errs:
         sys.exit("\nFAIL: nothing merged.")
-    print(f"{len(added)} new pick(s), {len(wadded)} new expert win number(s), {len(rev_added)} new review item(s), "
+    print(f"{len(added)} new pick(s), {len(labeled)} best-bet label(s) added to existing picks, {len(wadded)} new expert win number(s), {len(rev_added)} new review item(s), "
           f"{dup} duplicate(s) skipped.")
     for r in added:
         print(f"  + pick {r['analyst']:<16} {r['team']} {r['side']:<5} {r['line'] if r['line'] is not None else '-'}")
+    for old, bb in labeled:
+        print(f"  ~ best bet {old['analyst']:<16} {old['team']} {old['side']:<5} {bb['label']}" + (f" #{bb['rank']}" if bb.get("rank") else ""))
     for r in wadded:
         print(f"  + wins {r['expert']:<16} {r['team']} {r['wins']}" + (f"-{r['losses']}" if r["losses"] is not None else ""))
     if args.dry_run:
         print("Dry run -- nothing written.")
         return
+    for old, bb in labeled:
+        old["best_bet"] = bb
     picks_doc["picks"] += added
     picks_doc["picks"].sort(key=lambda p: (p["team"], p["analyst"], p["date"]))
     wins_doc["wins"] += wadded

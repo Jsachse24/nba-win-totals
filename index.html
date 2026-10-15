@@ -207,6 +207,31 @@ table.legs { white-space: normal; }
 .movers li { white-space: nowrap; cursor: pointer; }
 .movers li:hover b { text-decoration: underline; }
 @media (max-width: 767px) { .movers { grid-template-columns: 1fr; } .movers li { white-space: normal; } }
+/* ---------- expert best bets ---------- */
+.bb { margin-top: 18px; }
+.bb h2 { font-size: 16px; margin: 0 0 4px; }
+.bb > .note { color: var(--muted); font-size: 12px; margin: 0 0 10px; max-width: 980px; }
+.bb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+@media (max-width: 767px) { .bb-grid { grid-template-columns: 1fr; } }
+.bb-card { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 10px 12px; font-size: 12px; }
+.bb-card h3 { margin: 0; font-size: 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.bb-card h3 .na { font-weight: 400; font-size: 12px; }
+.badge { font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px; padding: 1px 7px; white-space: nowrap; }
+.badge .na { font-weight: 400; }
+.bb-pick { border-top: 1px solid var(--border); padding: 7px 0 6px; }
+.bb-card h3 + .bb-pick { border-top: 0; }
+.bb-row { display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: baseline; }
+.bb-row [data-team] { cursor: pointer; }
+.rank { display: inline-block; min-width: 26px; font-weight: 700; color: var(--accent); }
+.rank.un { color: var(--muted); font-weight: 400; font-size: 11px; min-width: 0; }
+.bb-src { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.bb-src a { color: var(--accent); }
+.bb-btns { display: flex; gap: 6px; margin-top: 4px; }
+.bb-btns button { padding: 2px 8px; font-size: 11px; }
+.bb-empty { color: var(--muted); padding: 6px 0 2px; }
+.bb-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.bb-list li { padding: 5px 0; border-top: 1px solid var(--border); }
+.bb-list li:first-child { border-top: 0; }
 footer { color: var(--faint); font-size: 11px; margin-top: 14px; line-height: 1.6; }
 footer a { color: var(--muted); }
 </style>
@@ -254,6 +279,8 @@ footer a { color: var(--muted); }
 
   <div class="table-wrap"><table id="tbl"></table></div>
   <div id="cards"></div>
+
+  <section class="bb" id="bestbets" aria-labelledby="bb-title"></section>
 
   <footer id="footer"></footer>
 </div>
@@ -460,6 +487,8 @@ footer a { color: var(--muted); }
     var opening = (lines && lines.opening) || {};
     var suspect = {};
     ((lines && lines.suspect_alt_lines) || []).forEach(function (sp) { suspect[sp.team + "|" + sp.book] = sp; });
+    var stale = {};
+    ((lines && lines.stale_lines) || []).forEach(function (sp) { stale[sp.team + "|" + sp.book] = sp; });
     var lastTeams = (last && last.teams) || {};
 
     return TEAMS.map(function (t) {
@@ -480,6 +509,8 @@ footer a { color: var(--muted); }
           total: cur.total, over: cur.over, under: cur.under, src: m.src[a][b], open: op,
           // Scraper dropped this book's line as a suspected alternate; ignored once an override supplies a total
           suspect: (!isNum(cur.total) && suspect[a + "|" + b]) || null,
+          // Kept as a lagging main line: the other books moved and this one hasn't caught up (dropped if an override changes the total)
+          stale: (stale[a + "|" + b] && cur.total === stale[a + "|" + b].total) ? stale[a + "|" + b] : null,
           // No-vig: normalize the two implied probabilities to sum to 100%
           nvOver: (io !== null && iu !== null) ? io / (io + iu) : null,
           nvUnder: (io !== null && iu !== null) ? iu / (io + iu) : null,
@@ -725,6 +756,13 @@ footer a { color: var(--muted); }
       "Add the main line in manual_overrides.json.";
     return '<span class="alt" title="' + esc(t) + '">alt?</span>';
   }
+  function staleMark(sp) {
+    if (!sp) return "";
+    var t = "Still at " + fmtTotal(sp.total) + ", where the other books were on " + fmtDate(sp.anchor_at) + " (median " +
+      fmtTotal(sp.anchor_median) + "). They've since moved to " + fmtTotal(sp.others_median) +
+      ". Kept as a main line that hasn't caught up yet; check the app before betting it.";
+    return '<span class="alt" title="' + esc(t) + '">stale?</span>';
+  }
   function modelTitle(r, x, side) {
     if (!r.mkt || !isNum(x.total)) return "";
     var t = "Market model: " + fmtPct(x["pw" + side]) + " to cash " + sideLetter(side) + fmtTotal(x.total);
@@ -801,7 +839,7 @@ footer a { color: var(--muted); }
         cell: function (r) {
           var x = r.b[b];
           var t = x.open ? "First tracked: " + fmtTotal(x.open.total) : "";
-          return val(fmtTotal(x.total)) + ovMark(x.src.total) + mvSpan(x.mvTotal, false, t) + altMark(x.suspect);
+          return val(fmtTotal(x.total)) + ovMark(x.src.total) + mvSpan(x.mvTotal, false, t) + altMark(x.suspect) + staleMark(x.stale);
         },
         tdcls: function (r) {
           var c = [];
@@ -981,6 +1019,7 @@ footer a { color: var(--muted); }
     });
     spans.forEach(function (sp, i) {
       var lbl = BOOK_NAME[sp.g] ? BOOK_NAME[sp.g] + bookHoldLabel(sp.g) : GRP_LABEL[sp.g] || "";
+      if (sp.g === "bestUnder") lbl += UNDER_NOTE;
       h += lbl ? '<th class="grp" colspan="' + sp.n + '">' + lbl + "</th>"
                : '<th class="' + (i === 0 ? "team" : "") + '" colspan="' + sp.n + '"></th>';
     });
@@ -1010,8 +1049,12 @@ footer a { color: var(--muted); }
     el("tbl").innerHTML = h + "</tbody>";
   }
 
+  // DK/MGM/CZR under prices aren't published by VegasInsider, so Best under is
+  // FanDuel's under unless an override adds another book's price
+  var UNDER_NOTE = ' <span class="bk" title="VegasInsider only publishes over prices for DraftKings, BetMGM and Caesars, ' +
+    'so their unders can only come from manual_overrides.json">FanDuel only for most teams</span>';
   function cardBest(r, bst, side) {
-    var lbl = side === "over" ? "Best over" : "Best under";
+    var lbl = side === "over" ? "Best over" : "Best under" + UNDER_NOTE;
     if (!bst) return '<div class="bestbox"><span class="k">' + lbl + "</span>" + val(DASH) + "</div>";
     return '<div class="bestbox' + (isMine(r.abbr, bst.books[0], side) ? " mine" : "") + '"' + pickAttrs(r.abbr, bst.books[0], side, bst.total) + ">" +
       '<span class="k">' + lbl + "</span>" + bestCell(bst) + " · " + evCell(bst) + "</div>";
@@ -1048,7 +1091,7 @@ footer a { color: var(--muted); }
     BOOKS.forEach(function (b) {
       var x = r.b[b];
       var bo = r.bestOver && r.bestOver.books.indexOf(b) >= 0, bu = r.bestUnder && r.bestUnder.books.indexOf(b) >= 0;
-      h += "<tr><td>" + BOOK_NAME[b] + "</td><td>" + val(fmtTotal(x.total)) + ovMark(x.src.total) + altMark(x.suspect) + "</td>";
+      h += "<tr><td>" + BOOK_NAME[b] + "</td><td>" + val(fmtTotal(x.total)) + ovMark(x.src.total) + altMark(x.suspect) + staleMark(x.stale) + "</td>";
       ["over", "under"].forEach(function (side) {
         var cls = ((side === "over" ? bo : bu) ? (side === "over" ? "best-o " : "best-u ") : "") + (isMine(r.abbr, b, side) ? "mine" : "");
         h += "<td" + (cls.trim() ? ' class="' + cls.trim() + '"' : "") + pickAttrs(r.abbr, b, side, x.total) + ">" + priceCell(r, b, side) + "</td>";
@@ -1294,10 +1337,129 @@ footer a { color: var(--muted); }
       '<div><h4>Biggest price moves ' + esc(sinceLabel) + "</h4><ol>" + ph + "</ol></div>";
   }
 
+  // ------------------------------------------------------ expert best bets
+  // Only picks the person explicitly labeled (best bet / favorite / lock / top
+  // pick / ranked list): the best_bet field in analyst_picks.json. Never inferred.
+  var BB = { cfg: null, approved: {}, records: null, picks: [] };
+  function tsSeconds(ts) {
+    if (!ts) return null;
+    return ts.split(":").reduce(function (a, x) { return a * 60 + (+x); }, 0);
+  }
+  function srcLink(p) {
+    var url = p.source_url, sec = tsSeconds(p.timestamp);
+    if (sec !== null && /youtube\.com\/watch|youtu\.be\//.test(url)) url += (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + sec + "s";
+    return '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a> · " + fmtDate(p.date + "T12:00:00") +
+      (p.timestamp ? " · @" + esc(p.timestamp) : "");
+  }
+  // Their line vs today's consensus. Over: a higher line is worse for them. Under: a lower one is.
+  function lineMoveTxt(p, r) {
+    if (!isNum(p.line)) return '<span class="na">no line stated · consensus ' + fmtTotal(r.cons) + "</span>";
+    var took = "took " + sideLetter(p.side) + fmtTotal(p.line);
+    if (!isNum(r.cons)) return took + ', <span class="na">no consensus now</span>';
+    var d = r.cons - p.line;
+    if (d === 0) return took + ", now " + fmtTotal(r.cons) + ' <span class="flat">no move</span>';
+    var against = p.side === "over" ? d > 0 : d < 0;
+    return took + ", now " + fmtTotal(r.cons) + ' <span class="' + (against ? "down" : "up") + '">moved ' + (against ? "against" : "with") + "</span>";
+  }
+  function bestNowTxt(r, side) {
+    var bst = side === "over" ? r.bestOver : r.bestUnder;
+    if (!bst) return '<span class="na">best ' + side + " price " + DASH + "</span>";
+    return "best now <b>" + sideLetter(side) + fmtTotal(bst.total) + " " + fmtOdds(bst.price) + "</b>" +
+      '<span class="bk">' + bst.books.map(function (b) { return BOOK_SHORT[b]; }).join("/") + "</span>";
+  }
+  function bbButtons(side, r) {
+    var bst = side === "over" ? r.bestOver : r.bestUnder;
+    var mine = bst && isMine(r.abbr, bst.books[0], side);
+    var asl = slipById(activeSlip);
+    return '<div class="bb-btns">' +
+      (bst ? '<button type="button"' + pickAttrs(r.abbr, bst.books[0], side, bst.total) + (mine ? ' class="mine"' : "") +
+        ' title="Tag ' + r.abbr + " " + side + ' at the best available line as my pick">' + (mine ? "✓ In My Picks" : "+ My Picks") + "</button>"
+        : '<button type="button" disabled title="No book has a price for this side">+ My Picks</button>') +
+      '<button type="button" data-addleg="' + r.abbr + "|" + side + '">+ ' + esc(asl ? asl.name : "new slip") + "</button></div>";
+  }
+  function bbPickHtml(p) {
+    var r = ROW_BY[p.team], bb = p.best_bet;
+    var rank = isNum(bb.rank) ? '<span class="rank">#' + bb.rank + "</span>" : '<span class="rank un">unranked</span>';
+    return '<div class="bb-pick"><div class="bb-row">' + rank + '<b data-team="' + r.abbr + '">' + r.abbr + "</b> " +
+      (p.side === "over" ? "Over" : "Under") + ' <span class="tag" title="' + esc(bb.evidence) + '">' + esc(bb.label) + "</span></div>" +
+      '<div class="bb-row">' + lineMoveTxt(p, r) + " · " + bestNowTxt(r, p.side) + "</div>" +
+      '<div class="bb-src">' + (bb.list_name ? esc(bb.list_name) + " · " : "") + srcLink(p) + "</div>" + bbButtons(p.side, r) + "</div>";
+  }
+  // Track-record badge per graded season (data/track_records.json, scraper/grade_picks.py)
+  function recordBadges(name) {
+    var rec = BB.records && BB.records.people && BB.records.people[name];
+    if (!rec) return "";
+    var noise = BB.records.noise_below || 20;
+    return ["2024-25", "2025-26"].filter(function (s) { return rec[s] && rec[s].w + rec[s].l + rec[s].p > 0; }).map(function (s) {
+      var x = rec[s], n = x.w + x.l + x.p;
+      return '<span class="badge" title="Graded against final records: ' + n + " graded of " + x.n + " stated picks" +
+        (x.p ? ", " + x.p + " push" : "") + (x.ungraded ? ", " + x.ungraded + " ungraded (no line)" : "") + '">' + s + ": " + x.w + "-" + x.l +
+        (x.p ? "-" + x.p : "") + ' on stated picks <span class="na">(n=' + n + (n < noise ? ", small sample" : "") + ")</span></span>";
+    }).join(" ");
+  }
+  function sortBB(list) {
+    return list.slice().sort(function (p, q) {
+      var lp = p.best_bet.list_name || "", lq = q.best_bet.list_name || "";
+      if (lp !== lq) return lp < lq ? -1 : 1;
+      var rp = isNum(p.best_bet.rank) ? p.best_bet.rank : 1e9, rq = isNum(q.best_bet.rank) ? q.best_bet.rank : 1e9;
+      return rp - rq || (p.team < q.team ? -1 : 1);
+    });
+  }
+  function renderBestBets() {
+    var sec = el("bestbets");
+    if (!BB.cfg) { sec.innerHTML = ""; return; }
+    var h = '<h2 id="bb-title">Expert best bets</h2><p class="note">Only picks the expert explicitly called a best bet, favorite, lock or top pick, ' +
+      "or put in a ranked list, in their stated order. Unranked picks are shown as unranked. \"Moved with/against\" compares the line they took to " +
+      "today's consensus. Sources are transcripts and articles only. Picks from audio without a readable transcript aren't included.</p>";
+    h += '<div class="bb-grid">';
+    BB.cfg.cards.forEach(function (c) {
+      var mine = sortBB(BB.picks.filter(function (p) { return p.analyst === c.expert; }));
+      var checked = '<span class="na">Last checked ' + fmtDate(c.checked_on + "T12:00:00") + (c.note ? ". " + esc(c.note) : "") + "</span>";
+      h += '<div class="bb-card"><h3>' + esc(c.expert) + ' <span class="na">' + esc(c.outlet || "") + "</span> " + recordBadges(c.expert) + "</h3>";
+      h += mine.length ? mine.map(bbPickHtml).join("") + '<div class="bb-src" style="margin-top:6px">' + checked + "</div>"
+        : '<div class="bb-empty">No published win total best bets found.<br>' + checked + "</div>";
+      h += "</div>";
+    });
+    h += "</div>";
+
+    // Consensus: the same team + side named as a best bet by 2+ approved, independent people
+    var by = {}, sides = {};
+    BB.picks.forEach(function (p) {
+      var k = p.team + "|" + p.side;
+      (by[k] = by[k] || {})[p.analyst] = p;
+      (sides[p.team] = sides[p.team] || {})[p.side] = true;
+    });
+    var cons = Object.keys(by).map(function (k) { return { k: k, people: Object.keys(by[k]).sort(), picks: by[k] }; })
+      .filter(function (x) { return x.people.length >= 2; })
+      .sort(function (a, b) { return b.people.length - a.people.length || (a.k < b.k ? -1 : 1); });
+    var conflicts = Object.keys(sides).filter(function (t) { return sides[t].over && sides[t].under; }).sort();
+    h += '<div class="bb-grid" style="margin-top:10px"><div class="bb-card"><h3>Consensus best bets <span class="na">2+ independent experts, approved list only</span></h3>';
+    h += cons.length ? '<ul class="bb-list">' + cons.map(function (x) {
+      var t = x.k.split("|"), r = ROW_BY[t[0]];
+      return '<li><div class="bb-row"><span class="rank">' + x.people.length + '×</span><b data-team="' + r.abbr + '">' + r.abbr + "</b> " +
+        (t[1] === "over" ? "Over" : "Under") + " · " + bestNowTxt(r, t[1]) + " · consensus " + fmtTotal(r.cons) + "</div>" +
+        '<div class="bb-src">' + x.people.map(function (n) {
+          var p = x.picks[n];
+          return esc(p.analyst) + " (" + esc(p.best_bet.label) + (isNum(p.best_bet.rank) ? " #" + p.best_bet.rank : "") + ", " +
+            (isNum(p.line) ? sideLetter(p.side) + fmtTotal(p.line) : "no line") + ', <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">' +
+            fmtDate(p.date + "T12:00:00") + "</a>)";
+        }).join(" · ") + "</div>" + bbButtons(t[1], r) + "</li>";
+    }).join("") + "</ul>" : '<div class="bb-empty">No team + side is a best bet for 2+ experts yet.</div>';
+    h += '</div><div class="bb-card"><h3>Conflicts <span class="na">best bets on opposite sides</span></h3>';
+    h += conflicts.length ? '<ul class="bb-list">' + conflicts.map(function (t) {
+      var ov = Object.keys(by[t + "|over"]).sort(), un = Object.keys(by[t + "|under"]).sort();
+      return '<li><div class="bb-row"><b data-team="' + t + '">' + t + "</b> Over: " + ov.map(esc).join(", ") + " · Under: " + un.map(esc).join(", ") +
+        " · consensus " + fmtTotal(ROW_BY[t].cons) + "</div></li>";
+    }).join("") + "</ul>" : '<div class="bb-empty">None.</div>';
+    h += "</div></div>";
+    sec.innerHTML = h;
+  }
+
   function renderMain() {
     var g = grouped(filtered());
     renderTable(g, visibleCols());
     renderCards(g);
+    renderBestBets();
     el("msort").value = state.sort;
     el("mdir").innerHTML = state.dir > 0 ? "&uarr;" : "&darr;";
     el("mine").setAttribute("aria-pressed", String(state.mine));
@@ -1350,7 +1512,7 @@ footer a { color: var(--muted); }
     if (t) { openDrawer(t.getAttribute("data-team")); return true; }
     return false;
   }
-  ["tbl", "cards", "drawer", "movers"].forEach(function (id) {
+  ["tbl", "cards", "drawer", "movers", "bestbets"].forEach(function (id) {
     el(id).addEventListener("click", activate);
     el(id).addEventListener("keydown", function (e) {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-pick], [data-team], button") && activate(e)) e.preventDefault();
@@ -1473,7 +1635,8 @@ footer a { color: var(--muted); }
 
   // ----------------------------------------------------------------- load
   function getJSON(path) {
-    return fetch(path, { cache: "no-store" }).then(function (r) {
+    // Query string busts GitHub Pages' CDN cache (max-age 600) as well as the browser's
+    return fetch(path + "?t=" + Date.now(), { cache: "no-store" }).then(function (r) {
       if (!r.ok) throw new Error(path + ": HTTP " + r.status);
       return r.json();
     }).catch(function (e) { return { _err: e }; });
@@ -1485,8 +1648,11 @@ footer a { color: var(--muted); }
 
   Promise.all([
     getJSON("data/lines.json"), getJSON("data/manual_overrides.json"), getJSON("data/last_season.json"),
-    getJSON("data/analyst_picks.json"), getJSON("data/projections.json"), getJSON("data/expert_wins.json")
+    getJSON("data/analyst_picks.json"), getJSON("data/projections.json"), getJSON("data/expert_wins.json"),
+    getJSON("data/best_bets.json"), getJSON("data/analyst_sources.json"), getJSON("data/track_records.json"),
+    getJSON("data/run_status.json")
   ]).then(function (res) {
+    var runStatus = ok(res[9]);
     var lines = ok(res[0]), ov = ok(res[1]), last = ok(res[2]), anDoc = ok(res[3]), projDoc = ok(res[4]), expDoc = ok(res[5]);
 
     if (location.protocol === "file:") {
@@ -1507,6 +1673,11 @@ footer a { color: var(--muted); }
     attachAnalysts(ROWS, anDoc);
     attachProjections(ROWS, projDoc);
     attachExperts(ROWS, expDoc);
+    BB.cfg = ok(res[6]);
+    var srcCfg = ok(res[7]);
+    ((srcCfg && srcCfg.analysts) || []).forEach(function (a) { BB.approved[a.name] = true; });
+    BB.records = ok(res[8]);
+    BB.picks = ((anDoc && anDoc.picks) || []).filter(function (p) { return p.best_bet && BB.approved[p.analyst] && ROW_BY[p.team]; });
     computeBookHolds();
     // Header sanity check: the 30 lines should roughly add up to the 1230 wins that exist
     var consAll = ROWS.map(function (r) { return r.cons; }).filter(isNum);
@@ -1522,12 +1693,22 @@ footer a { color: var(--muted); }
     ROWS.forEach(function (r) { BOOKS.forEach(function (b) { if (r.b[b].suspect) sus.push(r.abbr + " " + BOOK_SHORT[b]); }); });
     if (sus.length) warn("Excluded as suspected alternate lines (2+ wins off the other books): <b>" + sus.join(", ") +
       "</b>. VegasInsider doesn't mark main vs alt lines, so these show " + DASH + ". Add the main line in manual_overrides.json.");
+    var stl = [];
+    ROWS.forEach(function (r) { BOOKS.forEach(function (b) { if (r.b[b].stale) stl.push(r.abbr + " " + BOOK_SHORT[b] + " " + fmtTotal(r.b[b].total)); }); });
+    if (stl.length) warn("Possibly stale (kept in the table, marked stale?): <b>" + stl.join(", ") +
+      "</b>. The other books moved 1.5+ wins and this book is still at their old number. Likely a main line that hasn't caught up; check the app.");
+    ((lines && lines.possibly_stale_books) || []).forEach(function (b) {
+      warn("<b>" + BOOK_NAME[b] + "</b> numbers are identical to the previous snapshot for all 30 teams, so its source may be serving a cached page. " +
+        "Treat its lines as possibly stale.");
+    });
+    if (lines && lines.off_board_since) warn("Win totals came off the board around " + fmtTime(lines.off_board_since) +
+      ". Showing the last valid lines from " + fmtTime(lines.generated_at) + ".");
     var nOv = ov && Array.isArray(ov.overrides) ? ov.overrides.length : 0;
 
     var basis = lines && lines.opening_basis === "open" ? "since open" : "since first tracked";
     var first = lines && lines.first_tracked_at;
     el("updated").innerHTML = lines
-      ? "Last updated " + fmtTime(lines.generated_at) + " · Movement " + basis + (first && basis !== "since open" ? " (" + fmtDate(first) + ")" : "")
+      ? "Last updated " + fmtTime(lines.generated_at) + (lines.off_board_since ? " (final: off the board)" : "") + " · Movement " + basis + (first && basis !== "since open" ? " (" + fmtDate(first) + ")" : "")
       : "Last updated " + DASH;
 
     el("movers").innerHTML = lines ? moversHtml("since first tracked" + (first ? " (" + fmtDate(first) + ")" : "")) : "";
@@ -1558,7 +1739,12 @@ footer a { color: var(--muted); }
       "Expert win numbers: " + (expDoc && expDoc.wins ? expDoc.wins.length : DASH) + ". " +
       "<b>Rec</b> = expert average minus the consensus line: Over/Under at " + REC_THRESHOLD + "+ wins, No lean below that, Thin with fewer than " +
       REC_MIN_SOURCES + " independent sources. " +
-      "Projections: " + (projDoc && projDoc.projections && projDoc.projections.length ? esc(projDoc.system || "") : "not published yet") + ".";
+      "Projections: " + (projDoc && projDoc.projections && projDoc.projections.length ? esc(projDoc.system || "") : "not published yet") + "." +
+      "<br>Scheduled update: " + (runStatus
+        ? (runStatus.ok ? "last run " : '<b class="down">last run FAILED</b> ') + fmtTime(runStatus.last_run) +
+          (runStatus.state === "off_board" ? " (board is down; daily job stopped)" : "") +
+          (!runStatus.ok ? ": " + esc(runStatus.message) + (runStatus.last_success ? ". Last success " + fmtTime(runStatus.last_success) : "") : "")
+        : "no run recorded yet") + ".";
 
     el("banners").innerHTML = banners.map(function (b) { return '<div class="banner">' + b + "</div>"; }).join("");
     fillDivs();

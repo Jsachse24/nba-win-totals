@@ -10,42 +10,60 @@ import argparse
 import json
 import sys
 import traceback
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from core import (BOOKS, FIELDS, LINES, OVERRIDES, SNAPSHOTS, apply_overrides,  # noqa: E402
+from core import (BOOK_SHORT, BOOKS, FIELDS, LINES, OVERRIDES, SNAPSHOTS, apply_overrides,  # noqa: E402
                   empty_books, flag_suspect_alt_lines, load_json, print_summary, print_suspects,
                   validate, validate_overrides)
 from sources import SOURCES, SourceError  # noqa: E402
 from teams import ABBRS  # noqa: E402
 
+CLOSING = LINES.parent / "closing_lines.json"
+# 2026-27 opening night. Win totals usually come off the board around tip-off.
+SEASON_START = date(2026, 10, 20)
+MIN_TEAMS_ON_BOARD = 15  # fewer teams with any line than this = board pulled (or a parser broke)
+OFF_BOARD_EXIT = 3       # update.py stops the scheduled job on this
+
 # Which source supplies each book.
 BOOK_SOURCE = {"fanduel": "fanduel", "draftkings": "vegasinsider", "betmgm": "vegasinsider", "caesars": "vegasinsider"}
 
 
-def compute_opening(current_teams, now_iso):
+def load_history():
+    """Earlier snapshots as [(captured_at, raw books)], oldest first. Snapshots
+    store suspected alt lines blanked, so their raw values are restored from
+    the snapshot's suspect_alt_lines list."""
+    history = []
+    for p in sorted(SNAPSHOTS.glob("*.json")):
+        snap = load_json(p)
+        books = _complete(snap["teams"])
+        for s in snap.get("suspect_alt_lines") or []:
+            books[s["team"]][s["book"]] = {f: s.get(f) for f in FIELDS}
+        history.append((snap["captured_at"], books))
+    return history
+
+
+def compute_opening(history, current_teams, now_iso):
     """Opening = earliest snapshot in which each team/book had a total.
 
     Neither source publishes opening lines, so this is "since first tracked".
-    Suspected alt lines are dropped from older snapshots too, so an alt line
-    captured before that check existed can't become a team's "opening" line.
+    Suspected alt lines are dropped from older snapshots too (judged against
+    the snapshots before each one), so an alt line captured before that check
+    existed can't become a team's "opening" line.
     """
-    snaps = sorted(SNAPSHOTS.glob("*.json"))
-    history = [load_json(p) for p in snaps] + [{"captured_at": now_iso, "teams": current_teams}]
-    for snap in history:
-        snap["teams"], _ = flag_suspect_alt_lines(_complete(snap["teams"]))
+    full = history + [(now_iso, current_teams)]
     opening = {a: {b: None for b in BOOKS} for a in ABBRS}
-    for snap in history:
+    for i, (at, raw) in enumerate(full):
+        teams, _, _ = flag_suspect_alt_lines(raw, full[:i])
         for a in ABBRS:
             for b in BOOKS:
                 if opening[a][b] is not None:
                     continue
-                rec = snap["teams"].get(a, {}).get(b)
-                if rec and rec.get("total") is not None:
-                    opening[a][b] = {**{f: rec.get(f) for f in FIELDS}, "at": snap["captured_at"]}
-    first = history[0]["captured_at"]
-    return opening, first
+                rec = teams[a][b]
+                if rec.get("total") is not None:
+                    opening[a][b] = {**{f: rec.get(f) for f in FIELDS}, "at": at}
+    return opening, full[0][0]
 
 
 def _complete(teams):
@@ -55,6 +73,39 @@ def _complete(teams):
             rec = teams.get(a, {}).get(b) or {}
             books[a][b] = {f: rec.get(f) for f in FIELDS}
     return books
+
+
+def unchanged_books(raw, history):
+    """Books whose total/over/under match the previous snapshot for all 30 teams.
+    A source serving a cached page looks exactly like this."""
+    if not history:
+        return []
+    prev = history[-1][1]
+    return [b for b in BOOKS
+            if any(raw[a][b]["total"] is not None for a in ABBRS)
+            and all(raw[a][b] == prev[a][b] for a in ABBRS)]
+
+
+def off_board(now, now_iso, on_board, failed, dry_run):
+    """Too few teams have a line. Never overwrite lines.json with blanks. After
+    opening night that means the board came down: mark lines.json and save it as
+    closing_lines.json. Before then it's treated as a broken source."""
+    msg = f"only {on_board}/30 teams have a line from any book" + (f" (failed: {', '.join(failed)})" if failed else "")
+    if now.date() < SEASON_START:
+        sys.exit(f"\nFAIL: {msg}, before opening night ({SEASON_START}). Looks like a source problem, "
+                 "not the board coming down. lines.json NOT written.")
+    print(f"\nOFF THE BOARD: {msg}. Keeping the last valid lines.")
+    if dry_run:
+        sys.exit(OFF_BOARD_EXIT)
+    lines = load_json(LINES)
+    if lines and not lines.get("off_board_since"):
+        lines["off_board_since"] = now_iso
+        LINES.write_text(json.dumps(lines, indent=1) + "\n", encoding="utf-8")
+    if lines and not CLOSING.exists():
+        closing = {**lines, "closing_basis": "last valid scrape before win totals came off the board"}
+        CLOSING.write_text(json.dumps(closing, indent=1) + "\n", encoding="utf-8")
+        print(f"Saved {CLOSING.name} from the {lines['generated_at']} scrape.")
+    sys.exit(OFF_BOARD_EXIT)
 
 
 def main():
@@ -88,11 +139,18 @@ def main():
             for abbr, rec in teams.items():
                 books[abbr][book] = rec
 
+    on_board = sum(1 for a in ABBRS if any(books[a][b]["total"] is not None for b in BOOKS))
+    if on_board < MIN_TEAMS_ON_BOARD:
+        off_board(now, now_iso, on_board, failed, args.dry_run)
+
     if failed and not args.partial:
         sys.exit(f"\nFAIL: source(s) failed: {', '.join(failed)}. lines.json NOT written. "
                  "Re-run with --partial to publish without them, or fill gaps via manual_overrides.json.")
 
-    books, suspects = flag_suspect_alt_lines(books)
+    raw = books
+    history = load_history()
+    books, suspects, stale = flag_suspect_alt_lines(raw, history)
+    stale_books = unchanged_books(raw, history)
 
     overrides = load_json(OVERRIDES, {"overrides": []})
     ov_errors = validate_overrides(overrides)
@@ -102,8 +160,11 @@ def main():
 
     if src is not None:
         print_summary(merged, src, total_sum)
-    print_suspects(suspects)
+    print_suspects(suspects, stale)
     print()
+    for b in stale_books:
+        warnings.append(f"{BOOK_SHORT[b]} numbers are identical to the last snapshot ({history[-1][0][:16]}) for all 30 teams. "
+                        "Kept, but flagged on the page as possibly stale")
     for w in warnings:
         print(f"WARN: {w}")
     if errors:
@@ -116,7 +177,7 @@ def main():
         print("\nDry run OK -- nothing written.")
         return
 
-    opening, first = compute_opening(books, now_iso)
+    opening, first = compute_opening(history, raw, now_iso)
     out = {
         "season": "2026-27",
         "generated_at": now_iso,
@@ -126,12 +187,14 @@ def main():
         "sources": source_status,
         "teams": books,
         "suspect_alt_lines": suspects,
+        "stale_lines": stale,
+        "possibly_stale_books": stale_books,
         "opening": opening,
     }
     LINES.write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
     SNAPSHOTS.mkdir(parents=True, exist_ok=True)
     snap_path = SNAPSHOTS / f"{now:%Y-%m-%d_%H%M}.json"
-    snap = {"captured_at": now_iso, "sources": source_status, "teams": books, "suspect_alt_lines": suspects}
+    snap = {"captured_at": now_iso, "sources": source_status, "teams": books, "suspect_alt_lines": suspects, "stale_lines": stale}
     snap_path.write_text(json.dumps(snap, indent=1) + "\n", encoding="utf-8")
     print(f"\nOK: wrote {LINES.relative_to(LINES.parent.parent)} and {snap_path.relative_to(LINES.parent.parent)}")
 

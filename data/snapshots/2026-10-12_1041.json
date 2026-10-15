@@ -265,8 +265,8 @@
   },
   "CHA": {
    "draftkings": {
-    "total": null,
-    "over": null,
+    "total": 39.5,
+    "over": 100,
     "under": null
    },
    "fanduel": {
@@ -698,14 +698,18 @@
    "over": -200,
    "under": null,
    "others_median": 50.5
-  },
+  }
+ ],
+ "stale_lines": [
   {
    "team": "CHA",
    "book": "draftkings",
    "total": 39.5,
    "over": 100,
    "under": null,
-   "others_median": 37.5
+   "others_median": 37.5,
+   "anchor_at": "2026-10-05T14:47:08-07:00",
+   "anchor_median": 39.5
   }
  ]
 }

@@ -12,7 +12,13 @@
    "timestamp": null,
    "summary": "Sees few East teams worse; rebuilding roster likely to shed veterans like Powell midseason.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "9f18338288f0",
@@ -40,7 +46,13 @@
    "timestamp": null,
    "summary": "Model projects about 25.5 wins; limited talent beyond Irving and Flagg, coaching change is the wildcard.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "best bet",
+    "rank": null,
+    "list_name": "Best NBA win total under bets",
+    "evidence": "Listed in the article's 'Best NBA win total under bets' section, after the Wizards; no stated ranking."
+   }
   },
   {
    "id": "afb3c7e24652",
@@ -54,7 +66,13 @@
    "timestamp": null,
    "summary": "Butler still rehabbing, Curry turning 38, Porzingis injury-prone; line too rich.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "55622601c6e0",
@@ -82,7 +100,13 @@
    "timestamp": null,
    "summary": "Won 52 without VanVleet; expects internal leaps and a healthy Adams on the offensive glass.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "2a7e348dc793",
@@ -96,7 +120,13 @@
    "timestamp": null,
    "summary": "Model projects about 40 wins (about 42 after his own adjustment for Siakam); worried about Haliburton's ramp-up and the bench.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "best bet",
+    "rank": null,
+    "list_name": "Best NBA win total under bets",
+    "evidence": "Listed in the article's 'Best NBA win total under bets' section, after the Wizards; no stated ranking."
+   }
   },
   {
    "id": "5ce31fdf0de9",
@@ -110,7 +140,13 @@
    "timestamp": null,
    "summary": "Upgraded center with Kessler and deeper regular-season rotation; expects them to clear with ease.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "bb2d5576dec1",
@@ -124,7 +160,13 @@
    "timestamp": null,
    "summary": "High on rookie Cameron Boozer, a healthy Edey and the guard group; thinks they'll beat low expectations.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "9c1f48413d31",
@@ -152,7 +194,13 @@
    "timestamp": null,
    "summary": "Kawhi Leonard upgrade over Ingram should be worth at least one more win than last year.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "8567be4c3752",
@@ -166,7 +214,13 @@
    "timestamp": null,
    "summary": "Fading them despite Davis and Young; prefers the 35.5 he found elsewhere but would take under at any line.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "lock",
+    "rank": null,
+    "list_name": "8 locks on over/under win totals",
+    "evidence": "Article is titled as his 8 locks and introduces the list as his best bets; picks are not numbered or ranked."
+   }
   },
   {
    "id": "cd7142830496",
@@ -180,7 +234,13 @@
    "timestamp": null,
    "summary": "Best bet. His model projects about 22.5 wins; doubts the Young/Davis/Dybantsa boost and the coaching.",
    "basis": "stated",
-   "added_at": "2026-10-05T14:43:40-07:00"
+   "added_at": "2026-10-05T14:43:40-07:00",
+   "best_bet": {
+    "label": "best bet",
+    "rank": null,
+    "list_name": "Best NBA win total under bets",
+    "evidence": "Labeled 'Best bet' at the top of the article's best-unders section."
+   }
   }
  ]
 }

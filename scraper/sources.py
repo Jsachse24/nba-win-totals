@@ -133,12 +133,20 @@ def fetch_vegasinsider():
         raise SourceError(f"VI is missing expected book columns. Headers: {headers}")
 
     out = {b: {} for b in VI_BOOKS.values()}
+    other_market = 0
     for row in table.select("tbody tr"):
         team_img = row.select_one(".team-plate img")
         if team_img is None:
             continue
         abbr = normalize(team_img.get("alt", ""))
         cells = row.select("td.game-odds")
+        # Since ~10/15 VI appends a second market (bare prices like "+120", no
+        # o/u line; looks like title odds) to the same table. Skip rows where no
+        # cell has a win-total line; a duplicate win-total row still fails below.
+        vals = [v.get_text(strip=True) for td in cells for v in td.select("span.data-value")]
+        if any(vals) and not any(re.fullmatch(r"[ou]\d+(?:\.\d+)?", v.lower()) for v in vals if v):
+            other_market += 1
+            continue
         for i, book in col_book.items():
             if abbr in out[book]:
                 raise SourceError(f"VI lists {abbr} twice")
@@ -151,6 +159,8 @@ def fetch_vegasinsider():
             out[book][abbr] = rec
     if not any(out.values()):
         raise SourceError("VI table had no team rows")
+    if other_market:
+        print(f"VegasInsider: skipped {other_market} rows with no win-total line (another market in the same table)")
     return out
 
 

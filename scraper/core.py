@@ -32,6 +32,11 @@ VI_STALE_MAD = 4  # VI vs FanDuel mean abs diff above this = VI page looks stale
 # guessed at. Enter the real main line via manual_overrides.json.
 SUSPECT_ALT_BOOKS = ("draftkings",)
 ALT_LINE_WINS = 2
+# Before calling it an alt line, check snapshot history: if this book matched
+# the market in an earlier snapshot, hasn't changed its number since, and the
+# other books have since moved this far, it's a main line that hasn't caught
+# up. It stays in the table, marked "stale?" instead of "alt?".
+STALE_MOVE_WINS = 1.5
 
 
 def load_json(path, default=None):
@@ -102,34 +107,68 @@ def apply_overrides(books, ov):
     return merged, src
 
 
-def flag_suspect_alt_lines(books):
-    """Return (books, suspects). Suspected alt lines are replaced with an empty
-    record in a copy of `books`; the original records are left untouched."""
+def _others_median(books, a, b):
+    others = [books[a][o]["total"] for o in BOOKS if o != b and books[a][o].get("total") is not None]
+    return statistics.median(others) if len(others) >= 2 else None
+
+
+def _lagging_anchor(a, b, t, med, history):
+    """The latest earlier snapshot where book b sat at total t and matched the
+    other books, if b hasn't changed its number since and the other books'
+    median has moved STALE_MOVE_WINS+ from there. None otherwise.
+    `history` is [(captured_at, raw books)], oldest first."""
+    for at, snap in reversed(history):
+        if snap[a][b].get("total") != t:
+            return None  # this book moved since then, so it isn't sitting on an old number
+        then = _others_median(snap, a, b)
+        if then is None or abs(t - then) >= ALT_LINE_WINS:
+            continue  # off the market here too; look further back
+        if abs(med - then) >= STALE_MOVE_WINS:
+            return {"anchor_at": at, "anchor_median": then}
+        return None
+    return None
+
+
+def flag_suspect_alt_lines(books, history=()):
+    """Return (books, suspects, stale). A total ALT_LINE_WINS+ off the other books'
+    median is either a lagging main line (kept, listed in `stale`) or a suspected
+    alt line (replaced with an empty record in a copy of `books`, listed in
+    `suspects`). `history` is earlier raw snapshots, see _lagging_anchor. The
+    original records are left untouched."""
     out = {a: dict(bs) for a, bs in books.items()}
-    suspects = []
+    suspects, stale = [], []
     for a in ABBRS:
         for b in SUSPECT_ALT_BOOKS:
             rec = books[a][b]
             t = rec.get("total")
-            others = [books[a][o]["total"] for o in BOOKS if o != b and books[a][o].get("total") is not None]
-            if t is None or len(others) < 2:
+            med = _others_median(books, a, b)
+            if t is None or med is None or abs(t - med) < ALT_LINE_WINS:
                 continue
-            med = statistics.median(others)
-            if abs(t - med) >= ALT_LINE_WINS:
+            entry = {"team": a, "book": b, **{f: rec.get(f) for f in FIELDS}, "others_median": med}
+            anchor = _lagging_anchor(a, b, t, med, history)
+            if anchor:
+                stale.append({**entry, **anchor})
+            else:
                 out[a][b] = {f: None for f in FIELDS}
-                suspects.append({"team": a, "book": b, **{f: rec.get(f) for f in FIELDS}, "others_median": med})
-    return out, suspects
+                suspects.append(entry)
+    return out, suspects, stale
 
 
-def print_suspects(suspects):
-    if not suspects:
-        return
-    print()
-    print(f"Suspected alternate lines excluded ({len(suspects)}) -- shown as '-'; add the main line via manual_overrides.json:")
-    for s in suspects:
+def print_suspects(suspects, stale=()):
+    def line(s):
         o = "-" if s["over"] is None else f"{s['over']:+d}"
-        print(f"  {s['team']:<4} {BOOK_SHORT[s['book']]:<4} o{s['total']:g} {o}  vs other books' median {s['others_median']:g}"
-              f" ({s['total'] - s['others_median']:+g})")
+        return (f"  {s['team']:<4} {BOOK_SHORT[s['book']]:<4} o{s['total']:g} {o}  vs other books' median {s['others_median']:g}"
+                f" ({s['total'] - s['others_median']:+g})")
+    if suspects:
+        print()
+        print(f"Suspected alternate lines excluded ({len(suspects)}) -- shown as '-'; add the main line via manual_overrides.json:")
+        for s in suspects:
+            print(line(s))
+    if stale:
+        print()
+        print(f"Lagging main lines kept, marked 'stale?' ({len(stale)}) -- other books moved {STALE_MOVE_WINS:g}+ since this book last matched them:")
+        for s in stale:
+            print(line(s) + f"; matched median {s['anchor_median']:g} on {s['anchor_at'][:10]}")
 
 
 def consensus(merged, abbr):
