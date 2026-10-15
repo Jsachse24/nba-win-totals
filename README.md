@@ -130,8 +130,8 @@ python update.py --no-push       # commit locally only
 
 ### Daily scheduled run
 
-A Windows Task Scheduler job, **NBA Win Totals daily update**, runs `run_update.cmd`
-(which runs `python update.py`) every day at 9:00 AM while you're logged in. If the PC
+A Windows Task Scheduler job, **NBA Win Totals daily update**, runs `pythonw update.py`
+(no console window) every day at 9:00 AM while you're logged in. If the PC
 was off at 9, it runs at the next chance. It runs locally on purpose: sportsbook pages
 tend to block cloud IPs, so there's no GitHub Actions job.
 
