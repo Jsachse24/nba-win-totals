@@ -57,6 +57,20 @@
    "added_at": "2026-10-05T15:10:47-07:00"
   },
   {
+   "id": "842e5066abd0",
+   "expert": "Bill Simmons",
+   "team": "CHA",
+   "wins": 38,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "2:03:39",
+   "note": "In the Wizards segment said he had Charlotte at 38 (also floated 38-44 / 39-43 records).",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
    "id": "b3c034d99fbc",
    "expert": "Andy Bailey",
    "team": "CHI",
@@ -139,6 +153,20 @@
    "timestamp": null,
    "note": "Predicted record; article listed FanDuel's line at 48.5 on publish.",
    "added_at": "2026-10-05T15:10:47-07:00"
+  },
+  {
+   "id": "a9226ce7b315",
+   "expert": "Bill Simmons",
+   "team": "DET",
+   "wins": 45,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:03:30",
+   "note": "Said he has them at 45, docking 4-5 wins for a tougher East.",
+   "added_at": "2026-10-15T13:40:13-07:00"
   },
   {
    "id": "642438ab7f31",
@@ -337,6 +365,48 @@
    "added_at": "2026-10-05T15:10:47-07:00"
   },
   {
+   "id": "ed13a37b23df",
+   "expert": "Bill Simmons",
+   "team": "PHI",
+   "wins": 45,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "21:26",
+   "note": "Said he wrote the Sixers down for 45 wins (also gave a 43-45 range).",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "id": "efacde20fd53",
+   "expert": "Joe House",
+   "team": "PHI",
+   "wins": 50,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "21:26",
+   "note": "Said he has the Sixers winning 50 games.",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "id": "cea02e1e38e9",
+   "expert": "Zach Lowe",
+   "team": "PHI",
+   "wins": 47,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "21:26",
+   "note": "Said roughly 47 wins; Bill confirmed Zach had them at 47.",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
    "id": "81675a78765f",
    "expert": "Andy Bailey",
    "team": "PHX",
@@ -405,6 +475,20 @@
    "timestamp": null,
    "note": "Predicted record; article listed FanDuel's line at 44.5 on publish.",
    "added_at": "2026-10-05T15:10:47-07:00"
+  },
+  {
+   "id": "859abbd7955b",
+   "expert": "Joe House",
+   "team": "TOR",
+   "wins": 46,
+   "losses": null,
+   "kind": "projected_wins",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "35:48",
+   "note": "Expects exactly 46 wins again; later repeated he has the Raptors at 46.",
+   "added_at": "2026-10-15T13:40:13-07:00"
   },
   {
    "id": "d35287b9a9ca",

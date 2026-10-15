@@ -579,7 +579,16 @@ footer a { color: var(--muted); }
       r.an = Object.keys(r.anLatest).map(function (k) { return r.anLatest[k]; });
       r.anOver = r.an.filter(function (p) { return p.side === "over"; }).length;
       r.anUnder = r.an.length - r.anOver;
+      // Pod consensus: Simmons, Lowe and House (Simmons over/unders pod) all on the same side
+      var pod = POD.map(function (n) { return r.anLatest[n]; });
+      r.podCons = pod.every(function (p) { return p; }) && pod.every(function (p) { return p.side === pod[0].side; }) ? pod[0].side : null;
     });
+  }
+  var POD = ["Bill Simmons", "Zach Lowe", "Joe House"];
+  function podMark(r) {
+    if (!r.podCons) return "";
+    return ' <span class="tag" title="Simmons, Lowe and House all took the ' + r.podCons + ' (their latest stated pick)">Pod ' +
+      (r.podCons === "over" ? "O" : "U") + "</span>";
   }
   // Expert win numbers (dataset B): one number per expert per team (their latest);
   // the average and Rec use those. Sides are never derived from these.
@@ -808,7 +817,7 @@ footer a { color: var(--muted); }
   function analystCell(r) {
     if (!r.an.length) return "";
     var o = r.anOver, u = r.anUnder;
-    return o > u ? "Over " + o + "-" + u : u > o ? "Under " + u + "-" + o : "Split " + o + "-" + u;
+    return (o > u ? "Over " + o + "-" + u : u > o ? "Under " + u + "-" + o : "Split " + o + "-" + u) + podMark(r);
   }
   function projCell(r) {
     if (!r.proj) return val(DASH);
@@ -1105,15 +1114,16 @@ footer a { color: var(--muted); }
   }
   function drawerAnalysts(r) {
     if (!r.anAll.length) return '<p class="note">No sourced analyst picks for this team yet.</p>';
-    var h = '<ul class="src-list">';
+    var h = r.podCons ? '<p class="note"><b>Pod consensus:</b> Simmons, Lowe and House all took the ' + r.podCons + ".</p>" : "";
+    h += '<ul class="src-list">';
     r.anAll.forEach(function (p) {
       var cur = r.anLatest[p.analyst] === p;
       h += "<li><b>" + esc(p.analyst) + "</b> " + (p.side === "over" ? "Over" : "Under") +
         (isNum(p.line) ? " " + fmtTotal(p.line) : "") +
         (isNum(p.line) && r.cons !== null && p.line !== r.cons ? ' <span class="tag">consensus now ' + fmtTotal(r.cons) + "</span>" : "") +
         (cur ? "" : ' <span class="tag">superseded</span>') +
-        "<br>" + fmtDate(p.date + "T12:00:00") + ' · <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a>" +
-        (p.timestamp ? " @" + esc(p.timestamp) : "") + '<br><span class="na">' + esc(p.summary) + "</span></li>";
+        (p.best_bet ? ' <span class="tag">' + esc(p.best_bet.label) + (p.best_bet.rank ? " #" + p.best_bet.rank : "") + "</span>" : "") +
+        "<br>" + srcLink(p) + '<br><span class="na">' + esc(p.summary) + "</span></li>";
     });
     return h + "</ul>";
   }

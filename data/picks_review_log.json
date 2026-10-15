@@ -32,6 +32,138 @@
    "reason": "Two different win numbers for the Pacers in the same article (model about 40; his adjusted view about 42), so no single expert number was recorded.",
    "note": "His under 43.5 pick is recorded in analyst_picks.",
    "added_at": "2026-10-05T15:10:47-07:00"
+  },
+  {
+   "analyst": "Joe House",
+   "team": "DET",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:03:30",
+   "reason": "Lock label conflict: in the segment House appears to lock the over himself, but the recap says Zach locked it and House was a plain over. No best_bet recorded for either.",
+   "note": "Sides unaffected (Zach over, House over, Bill under).",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": "Zach Lowe",
+   "team": "DET",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "2:19:20",
+   "reason": "Recap credits Zach with a Pistons over lock, but in the segment Zach never says lock; the locking speaker reads as House. Not flagged.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "CHI",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "2:19:20",
+   "reason": "During the recap someone interjects to lock the Bulls under (wants an odd number of locks); speaker can't be identified from the unlabeled transcript (Bill or Zach). No best_bet recorded.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "ORL",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:37:13",
+   "reason": "In the segment a speaker says 'I lock' (maybe garbled, alongside 'I had them as an overlock last year'), but recap lists three plain overs. No lock recorded.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "LAL",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/13/nba-over-unders-part-1-the-west-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 1: The West | With Zach Lowe and Joe House",
+   "date": "2026-10-13",
+   "timestamp": "1:41:00",
+   "reason": "Someone says '46 and 36 minimum' for the Lakers (likely Bill). It's a floor, not a projection, and the speaker is uncertain; not recorded in expert_wins.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "SAC",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/13/nba-over-unders-part-1-the-west-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 1: The West | With Zach Lowe and Joe House",
+   "date": "2026-10-13",
+   "timestamp": "2:08:24",
+   "reason": "Someone says '21 and 61 sounds fine' for the Kings (Bill or Zach, can't tell). Not recorded in expert_wins.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "IND",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:12:10",
+   "reason": "Someone says they have the Pacers at 52 wins (Bill or House; Zach said 47-48). Speaker unclear; not recorded.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "BOS",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "2:19:20",
+   "reason": "End-of-show 'highest East win total': one says 54, another says they had the Celtics at 54, a third says 56. Speakers unclear; not recorded.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": "Bill Simmons",
+   "team": "WAS",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "2:03:39",
+   "reason": "Bill has the Wizards at 32-34 wins and says 'I'll give you 34 just to be fun'. A range plus a joke; not recorded.",
+   "note": "",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "CHI",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:28:35",
+   "reason": "26 wins for CHI came from one speaker's sketch of East totals; credited to Simmons only by inference, so not used",
+   "note": "From his sketch of all East wins (Bulls 26). No speaker labels; attributed by context (same speaker had CHA at 38).",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "BKN",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:28:35",
+   "reason": "21 wins for BKN came from one speaker's sketch of East totals; credited to Simmons only by inference, so not used",
+   "note": "From his sketch of all East wins (Nets 21). No speaker labels; attributed by context.",
+   "added_at": "2026-10-15T13:40:13-07:00"
+  },
+  {
+   "analyst": null,
+   "team": "MIL",
+   "source_url": "https://www.theringer.com/podcasts/the-bill-simmons-podcast/2026/10/14/nba-over-unders-part-2-the-east-with-zach-lowe-and-joe-house-2",
+   "title": "NBA Over/Unders, Part 2: The East | With Zach Lowe and Joe House",
+   "date": "2026-10-14",
+   "timestamp": "1:28:35",
+   "reason": "21 wins for MIL came from one speaker's sketch of East totals; credited to Simmons only by inference, so not used",
+   "note": "From his sketch of all East wins (Bucks 21). No speaker labels; attributed by context.",
+   "added_at": "2026-10-15T13:40:13-07:00"
   }
  ]
 }

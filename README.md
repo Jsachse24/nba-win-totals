@@ -306,6 +306,28 @@ Open **Parlay slips** (a drawer on desktop, a bottom sheet on mobile).
   approved analysts (anyone in `analyst_sources.json`, not just the cards), ranked by
   how many. **Conflicts:** teams with best bets on both sides.
 
+## Simmons / Lowe / House Over/Unders (2026-27)
+
+From The Bill Simmons Podcast's two over/under episodes (West, Oct 13; East, Oct 14),
+read from the published podscripts.co transcripts. Nothing was heard, downloaded or
+machine-transcribed. The transcripts have no speaker labels, so each side comes from the
+end-of-episode **Recap**, where every person's pick is read back. The team chapter is used
+for the reasoning summary. Timestamps are the team's chapter start on the Ringer page.
+
+- 90 stated picks (30 teams x 3). 17 are labelled `lock`, and none are ranked. A lock first
+  called during the Recap counts. Locks that couldn't be tied to one speaker (DET, CHI,
+  ORL, and lock remarks on OKC/LAL) are in `picks_review_log.json`, not on the cards.
+- No Recap side contradicted a team segment. Line notes: CLE's chapter intro says 40.5,
+  but the discussion and Recap say 48.5 (used). UTA's Recap says 37; the segment line is
+  37.5 (used).
+- Win numbers in `expert_wins.json`: Simmons PHI 45 / DET 45 / CHA 38, Lowe PHI 47,
+  House PHI 50 / TOR 46. Floors, ranges, jokes, and a sketch of East totals that can't be
+  pinned to one speaker (CHI 26, BKN 21, MIL 21) went to the review log.
+- **Pod consensus:** a `Pod O` / `Pod U` tag in the Analysts cell (and a line in the
+  drawer) when all three are on the same side. That's 18 teams as of 10/15.
+- Source `kind: "podcast"` in `analyst_sources.json` means the transcript was read by hand;
+  `fetch` just caches the episode page.
+
 ## Track records (`scraper/grade_picks.py`)
 
 ```
@@ -320,6 +342,17 @@ line the person didn't state unless `line_source` says where it came from. Picks
 no line are counted as ungraded, never guessed. A whole-number line that lands exactly
 is a push. Each season reports W-L-P, win rate and lines disclosed, and gets flagged
 as a small sample under 20 graded picks.
+
+`track_record_picks.json` currently holds Simmons and House (2024-25, 2025-26), Lowe
+(2025-26) and Windhorst (2025-26), read from published podscripts.co transcripts:
+
+- Simmons/Lowe/House sides come from each episode's Recap.
+- Windhorst is credited by the show's format: he says on air that he picks last, so the
+  last stated side before each team handoff is his. Treat his record as softer.
+- Lowe 2024-25 and Windhorst 2024-25 weren't found (no published transcript or written
+  source), so those seasons have no badge.
+- The fan-maintained Google Sheet of past Simmons pod records couldn't be found, so it
+  wasn't used as a cross-check.
 
 Candidates for new analysts are researched and graded the same way, but **they're not
 added to `analyst_sources.json` (or the page) until approved**.

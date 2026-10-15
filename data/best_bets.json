@@ -1,9 +1,35 @@
 {
  "_help": "Experts shown as cards in the Expert best bets section. Their picks come from analyst_picks.json (picks with a best_bet label). checked_on = the last date their sources were searched; note = optional context shown on the card. Consensus best bets use every approved analyst in analyst_sources.json, not just these cards.",
  "cards": [
-  {"expert": "Bill Simmons", "outlet": "The Bill Simmons Podcast", "checked_on": "2026-10-12", "note": ""},
-  {"expert": "Zach Lowe", "outlet": "The Zach Lowe Show", "checked_on": "2026-10-12", "note": ""},
-  {"expert": "Brian Windhorst", "outlet": "ESPN", "checked_on": "2026-10-12", "note": ""},
-  {"expert": "Shams Charania", "outlet": "ESPN", "checked_on": "2026-10-12", "note": ""}
+  {
+   "expert": "Bill Simmons",
+   "outlet": "The Bill Simmons Podcast",
+   "checked_on": "2026-10-15",
+   "note": ""
+  },
+  {
+   "expert": "Zach Lowe",
+   "outlet": "The Zach Lowe Show",
+   "checked_on": "2026-10-15",
+   "note": ""
+  },
+  {
+   "expert": "Joe House",
+   "outlet": "The Bill Simmons Podcast",
+   "checked_on": "2026-10-15",
+   "note": ""
+  },
+  {
+   "expert": "Brian Windhorst",
+   "outlet": "ESPN",
+   "checked_on": "2026-10-12",
+   "note": ""
+  },
+  {
+   "expert": "Shams Charania",
+   "outlet": "ESPN",
+   "checked_on": "2026-10-12",
+   "note": ""
+  }
  ]
 }
