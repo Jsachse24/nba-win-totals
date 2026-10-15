@@ -128,6 +128,35 @@ python update.py --skip-scrape   # overrides-only change: validate -> commit -> 
 python update.py --no-push       # commit locally only
 ```
 
+### Daily scheduled run
+
+A Windows Task Scheduler job, **NBA Win Totals daily update**, runs `run_update.cmd`
+(which runs `python update.py`) every day at 9:00 AM while you're logged in. If the PC
+was off at 9, it runs at the next chance. It runs locally on purpose: sportsbook pages
+tend to block cloud IPs, so there's no GitHub Actions job.
+
+```
+powershell -File schedule_task.ps1               # (re)register, default 9:00AM
+powershell -File schedule_task.ps1 -At 7:30AM    # change the time
+schtasks /Run /TN "NBA Win Totals daily update"  # run it now
+```
+
+- Every run appends to `logs/update.log` (local, gitignored) and writes
+  `data/run_status.json`, which the page footer shows ("Scheduled update: last run ...").
+  A failed run commits and pushes only `run_status.json`, so the live footer says
+  **last run FAILED** with the error and the last success time. The lines stay as they were.
+- **Possibly stale book:** if a book's numbers match the latest snapshot that's 12+ hours
+  old (`UNCHANGED_MIN_HOURS`) for all 30 teams, the scrape still goes through, but the page
+  shows a banner saying that book's source may be serving a cached page.
+- **Board comes down:** if fewer than 15 teams have a line from any book, nothing is
+  overwritten. Before opening night (`SEASON_START` = 2026-10-20) that counts as a source
+  failure. After opening night, the scraper marks `lines.json` with `off_board_since`
+  (the header then says "final: off the board"), saves the last valid scrape as
+  `data/closing_lines.json`, and exits 3. `update.py` commits and pushes that, then
+  disables the scheduled task.
+- Data fetches on the page add a `?t=` query string, which bypasses GitHub Pages'
+  10-minute CDN cache as well as the browser's.
+
 GitHub Pages serves the repo root from `main`. One-time setup:
 Settings -> Pages -> Source "Deploy from a branch", branch `main`, folder `/ (root)`.
 

@@ -25,6 +25,7 @@ CLOSING = LINES.parent / "closing_lines.json"
 SEASON_START = date(2026, 10, 20)
 MIN_TEAMS_ON_BOARD = 15  # fewer teams with any line than this = board pulled (or a parser broke)
 OFF_BOARD_EXIT = 3       # update.py stops the scheduled job on this
+UNCHANGED_MIN_HOURS = 12
 
 # Which source supplies each book.
 BOOK_SOURCE = {"fanduel": "fanduel", "draftkings": "vegasinsider", "betmgm": "vegasinsider", "caesars": "vegasinsider"}
@@ -75,15 +76,17 @@ def _complete(teams):
     return books
 
 
-def unchanged_books(raw, history):
-    """Books whose total/over/under match the previous snapshot for all 30 teams.
-    A source serving a cached page looks exactly like this."""
-    if not history:
-        return []
-    prev = history[-1][1]
+def unchanged_books(raw, history, now):
+    """Books whose total/over/under match the latest snapshot at least
+    UNCHANGED_MIN_HOURS old, for all 30 teams. A source serving a cached page
+    looks exactly like this. (Runs minutes apart are expected to match.)"""
+    older = [(at, b) for at, b in history if (now - datetime.fromisoformat(at)).total_seconds() >= UNCHANGED_MIN_HOURS * 3600]
+    if not older:
+        return [], None
+    at, prev = older[-1]
     return [b for b in BOOKS
             if any(raw[a][b]["total"] is not None for a in ABBRS)
-            and all(raw[a][b] == prev[a][b] for a in ABBRS)]
+            and all(raw[a][b] == prev[a][b] for a in ABBRS)], at
 
 
 def off_board(now, now_iso, on_board, failed, dry_run):
@@ -150,7 +153,7 @@ def main():
     raw = books
     history = load_history()
     books, suspects, stale = flag_suspect_alt_lines(raw, history)
-    stale_books = unchanged_books(raw, history)
+    stale_books, compared_at = unchanged_books(raw, history, now)
 
     overrides = load_json(OVERRIDES, {"overrides": []})
     ov_errors = validate_overrides(overrides)
@@ -163,7 +166,7 @@ def main():
     print_suspects(suspects, stale)
     print()
     for b in stale_books:
-        warnings.append(f"{BOOK_SHORT[b]} numbers are identical to the last snapshot ({history[-1][0][:16]}) for all 30 teams. "
+        warnings.append(f"{BOOK_SHORT[b]} numbers are identical to the {compared_at[:16]} snapshot for all 30 teams. "
                         "Kept, but flagged on the page as possibly stale")
     for w in warnings:
         print(f"WARN: {w}")
