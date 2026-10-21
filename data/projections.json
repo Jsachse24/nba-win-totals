@@ -1,4 +1,216 @@
 {
- "system": null,
- "projections": []
+ "system": "ESPN BPI",
+ "fetched_at": "2026-10-20T19:47:39-07:00",
+ "projections": [
+  {
+   "team": "ATL",
+   "projected_wins": 42.178,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "BKN",
+   "projected_wins": 25.011,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "BOS",
+   "projected_wins": 51.287,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "CHA",
+   "projected_wins": 39.919,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "CHI",
+   "projected_wins": 28.25,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "CLE",
+   "projected_wins": 47.936,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "DAL",
+   "projected_wins": 33.824,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "DEN",
+   "projected_wins": 48.656,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "DET",
+   "projected_wins": 49.38,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "GSW",
+   "projected_wins": 43.569,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "HOU",
+   "projected_wins": 46.688,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "IND",
+   "projected_wins": 42.006,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "LAC",
+   "projected_wins": 30.092,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "LAL",
+   "projected_wins": 45.416,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "MEM",
+   "projected_wins": 29.431,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "MIA",
+   "projected_wins": 45.581,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "MIL",
+   "projected_wins": 26.293,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "MIN",
+   "projected_wins": 47.806,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "NOP",
+   "projected_wins": 28.081,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "NYK",
+   "projected_wins": 51.691,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "OKC",
+   "projected_wins": 60.662,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "ORL",
+   "projected_wins": 42.925,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "PHI",
+   "projected_wins": 47.478,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "PHX",
+   "projected_wins": 40.366,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "POR",
+   "projected_wins": 41.388,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "SAC",
+   "projected_wins": 21.665,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "SAS",
+   "projected_wins": 59.088,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "TOR",
+   "projected_wins": 45.515,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "UTA",
+   "projected_wins": 35.379,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  },
+  {
+   "team": "WAS",
+   "projected_wins": 32.439,
+   "system": "ESPN BPI",
+   "source": "https://www.espn.com/nba/bpi",
+   "date": "2026-10-06"
+  }
+ ]
 }
