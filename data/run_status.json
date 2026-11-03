@@ -1,7 +1,7 @@
 {
- "last_run": "2026-11-02T08:31:21-08:00",
+ "last_run": "2026-11-03T08:42:16-08:00",
  "ok": true,
- "state": "off_board",
- "message": "Win totals are off the board. Kept the last valid lines and saved closing_lines.json.",
- "last_success": "2026-11-02T08:31:21-08:00"
+ "state": "ok",
+ "message": "Scraped and validated",
+ "last_success": "2026-11-03T08:42:16-08:00"
 }
