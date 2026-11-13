@@ -1,6 +1,6 @@
 {
  "season": "2026-27",
- "generated_at": "2026-11-12T08:00:35-08:00",
+ "generated_at": "2026-11-13T08:00:10-08:00",
  "opening_basis": "first_tracked",
  "first_tracked_at": "2026-10-05T13:32:01-07:00",
  "book_source": {
@@ -13,7 +13,7 @@
   "fanduel": {
    "ok": true,
    "url": "https://sportsbook.fanduel.com/navigation/nba?tab=regular-season-wins",
-   "fetched_at": "2026-11-12T08:00:35-08:00",
+   "fetched_at": "2026-11-13T08:00:10-08:00",
    "books": [
     "fanduel"
    ]
@@ -21,7 +21,7 @@
   "vegasinsider": {
    "ok": true,
    "url": "https://www.vegasinsider.com/nba/odds/win-totals/",
-   "fetched_at": "2026-11-12T08:00:35-08:00",
+   "fetched_at": "2026-11-13T08:00:10-08:00",
    "books": [
     "betmgm",
     "caesars",
@@ -38,8 +38,8 @@
    },
    "fanduel": {
     "total": 57.5,
-    "over": -115,
-    "under": -110
+    "over": -110,
+    "under": -115
    },
    "betmgm": {
     "total": 57.5,
@@ -81,9 +81,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 52.5,
-    "over": 110,
-    "under": -140
+    "total": 51.5,
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 51.5,
@@ -103,18 +103,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 52.5,
-    "over": -125,
-    "under": -105
+    "total": 53.5,
+    "over": 105,
+    "under": -130
    },
    "betmgm": {
-    "total": 53.5,
-    "over": -105,
+    "total": 52.5,
+    "over": -125,
     "under": null
    },
    "caesars": {
-    "total": 52.5,
-    "over": -135,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -125,18 +125,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 47.5,
-    "over": 100,
-    "under": -125
+    "total": 46.5,
+    "over": -125,
+    "under": 100
    },
    "betmgm": {
-    "total": 47.5,
-    "over": -105,
+    "total": 46.5,
+    "over": -130,
     "under": null
    },
    "caesars": {
-    "total": 47.5,
-    "over": 105,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -148,17 +148,17 @@
    },
    "fanduel": {
     "total": 24.5,
-    "over": -115,
-    "under": -110
+    "over": 100,
+    "under": -125
    },
    "betmgm": {
     "total": 24.5,
-    "over": -110,
+    "over": 100,
     "under": null
    },
    "caesars": {
-    "total": 24.5,
-    "over": 105,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -169,9 +169,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 45.5,
-    "over": -145,
-    "under": 115
+    "total": 46.5,
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 46.5,
@@ -192,17 +192,17 @@
    },
    "fanduel": {
     "total": 51.5,
-    "over": -115,
-    "under": -110
+    "over": -120,
+    "under": -105
    },
    "betmgm": {
     "total": 51.5,
-    "over": -105,
+    "over": -120,
     "under": null
    },
    "caesars": {
-    "total": 51.5,
-    "over": -110,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -214,8 +214,8 @@
    },
    "fanduel": {
     "total": 38.5,
-    "over": -125,
-    "under": 100
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 39.5,
@@ -258,8 +258,8 @@
    },
    "fanduel": {
     "total": 42.5,
-    "over": -120,
-    "under": -105
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 43.5,
@@ -279,18 +279,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 35.5,
-    "over": 100,
-    "under": -125
+    "total": 34.5,
+    "over": -125,
+    "under": 100
    },
    "betmgm": {
-    "total": 35.5,
-    "over": 100,
+    "total": 34.5,
+    "over": -120,
     "under": null
    },
    "caesars": {
-    "total": 34.5,
-    "over": -115,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -323,9 +323,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 39.5,
-    "over": -110,
-    "under": -115
+    "total": 40.5,
+    "over": 100,
+    "under": -125
    },
    "betmgm": {
     "total": 39.5,
@@ -345,18 +345,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 31.5,
-    "over": 120,
-    "under": -145
+    "total": 30.5,
+    "over": 100,
+    "under": -125
    },
    "betmgm": {
     "total": 31.5,
-    "over": 100,
+    "over": 110,
     "under": null
    },
    "caesars": {
-    "total": 31.5,
-    "over": 115,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -389,18 +389,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 48.5,
-    "over": -110,
-    "under": -115
+    "total": 49.5,
+    "over": -130,
+    "under": 100
    },
    "betmgm": {
-    "total": 48.5,
-    "over": 100,
+    "total": 49.5,
+    "over": -120,
     "under": null
    },
    "caesars": {
-    "total": 48.5,
-    "over": -120,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -411,9 +411,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 56.5,
-    "over": 125,
-    "under": -155
+    "total": 55.5,
+    "over": 100,
+    "under": -125
    },
    "betmgm": {
     "total": 55.5,
@@ -422,7 +422,7 @@
    },
    "caesars": {
     "total": 56.5,
-    "over": 120,
+    "over": 130,
     "under": null
    }
   },
@@ -433,9 +433,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 48.5,
-    "over": -145,
-    "under": 115
+    "total": 49.5,
+    "over": -120,
+    "under": -105
    },
    "betmgm": {
     "total": 48.5,
@@ -455,9 +455,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 24.5,
-    "over": 105,
-    "under": -135
+    "total": 23.5,
+    "over": -110,
+    "under": -115
    },
    "betmgm": {
     "total": 24.5,
@@ -477,9 +477,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 43.5,
-    "over": -115,
-    "under": -110
+    "total": 42.5,
+    "over": -110,
+    "under": -115
    },
    "betmgm": {
     "total": 42.5,
@@ -500,8 +500,8 @@
    },
    "fanduel": {
     "total": 26.5,
-    "over": -115,
-    "under": -110
+    "over": -120,
+    "under": -105
    },
    "betmgm": {
     "total": 26.5,
@@ -522,7 +522,7 @@
    },
    "fanduel": {
     "total": 51.5,
-    "over": -130,
+    "over": -125,
     "under": 100
    },
    "betmgm": {
@@ -544,17 +544,17 @@
    },
    "fanduel": {
     "total": 36.5,
-    "over": -110,
-    "under": -115
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 36.5,
-    "over": 100,
+    "over": -110,
     "under": null
    },
    "caesars": {
-    "total": 36.5,
-    "over": -105,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -587,18 +587,18 @@
     "under": null
    },
    "fanduel": {
-    "total": 40.5,
-    "over": -105,
-    "under": -120
+    "total": 39.5,
+    "over": -120,
+    "under": -105
    },
    "betmgm": {
     "total": 40.5,
-    "over": 100,
+    "over": 110,
     "under": null
    },
    "caesars": {
-    "total": 40.5,
-    "over": -120,
+    "total": null,
+    "over": null,
     "under": null
    }
   },
@@ -609,9 +609,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 54.5,
-    "over": -135,
-    "under": 110
+    "total": 55.5,
+    "over": -105,
+    "under": -120
    },
    "betmgm": {
     "total": 54.5,
@@ -653,9 +653,9 @@
     "under": null
    },
    "fanduel": {
-    "total": 28.5,
-    "over": 110,
-    "under": -140
+    "total": 27.5,
+    "over": -115,
+    "under": -110
    },
    "betmgm": {
     "total": 27.5,
@@ -676,8 +676,8 @@
    },
    "fanduel": {
     "total": 60.5,
-    "over": -115,
-    "under": -110
+    "over": -120,
+    "under": -105
    },
    "betmgm": {
     "total": 60.5,
